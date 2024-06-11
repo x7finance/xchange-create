@@ -1,0 +1,27 @@
+{
+  "name": "xc",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "pnpm --filter @xc/nextjs dev",
+    "next:lint": "pnpm --filter @xc/nextjs lint",
+    "next:format": "pnpm --filter @xc/nextjs format",
+    "next:check-types": "pnpm --filter @xc/nextjs check-types",
+    "next:build": "pnpm --filter @xc/nextjs build",
+    "next:serve": "pnpm --filter @xc/nextjs serve",
+    "format": "pnpm next:format",
+    "postinstall": "husky install",
+    "precommit": "lint-staged",
+    "vercel": "pnpm --filter @xc/nextjs vercel",
+    "vercel:yolo": "pnpm --filter @xc/nextjs vercel:yolo"
+  },
+  "devDependencies": {
+    "husky": "~8.0.3",
+    "lint-staged": "~13.2.2",
+    "next": "15.0.0-canary.9",
+    "vercel": "~32.4.1"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  }
+}

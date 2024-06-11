@@ -1,0 +1,10 @@
+/dist
+
+# Dependency directories
+node_modules/
+
+# pnpm
+.pnpm-store/
+
+# macos files
+.DS_Store

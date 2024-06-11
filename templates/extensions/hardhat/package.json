@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "account": "pnpm --filter @xc/hardhat account",
+    "chain": "pnpm --filter @xc/hardhat chain",
+    "fork": "pnpm --filter @xc/hardhat fork",
+    "task": "pnpm --filter @xc/hardhat task",
+    "verify": "pnpm --filter @xc/hardhat verify",
+    "hardhat-verify": "pnpm --filter @xc/hardhat hardhat-verify",
+    "compile": "pnpm --filter @xc/hardhat compile",
+    "generate": "pnpm --filter @xc/hardhat generate",
+    "hardhat:lint": "pnpm --filter @xc/hardhat lint",
+    "hardhat:lint-staged": "pnpm --filter @xc/hardhat lint-staged",
+    "hardhat:format": "pnpm --filter @xc/hardhat format",
+    "hardhat:test": "pnpm --filter @xc/hardhat test",
+    "test": "pnpm hardhat:test",
+    "flatten": "pnpm --filter @xc/hardhat flatten",
+    "format": "pnpm next:format && pnpm hardhat:format"
+  }
+}

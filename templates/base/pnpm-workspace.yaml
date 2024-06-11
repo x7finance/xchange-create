@@ -1,0 +1,6 @@
+packages:
+  - 'packages/*'
+
+npmHoistingLimits: workspaces
+
+nodeLinker: node-modules

@@ -1,0 +1,4 @@
+{
+  "extends": "./node_modules/@wayofdev/markdownlint-config/index.json",
+  "MD029": false
+}

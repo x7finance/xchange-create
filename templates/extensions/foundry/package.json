@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "account": "pnpm --filter @xc/foundry account",
+    "fork": "pnpm --filter @xc/foundry fork",
+    "compile": "pnpm --filter @xc/foundry compile",
+    "chain": "pnpm --filter @xc/foundry chain",
+    "deploy": "pnpm --filter @xc/foundry deploy",
+    "deploy:verify": "pnpm --filter @xc/foundry deploy:verify",
+    "foundry:lint": "pnpm --filter @xc/foundry lint",
+    "foundry:test": "pnpm --filter @xc/foundry test",
+    "foundry:format": "pnpm --filter @xc/foundry format",
+    "test": "pnpm foundry:test",
+    "verify": "pnpm --filter @xc/foundry verify",
+    "generate": "pnpm --filter @xc/foundry generate",
+    "flatten": "pnpm --filter @xc/foundry flatten",
+    "format": "pnpm next:format && pnpm foundry:format"
+  }
+}
