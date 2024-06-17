@@ -1,15 +1,17 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-import { CONTRACT_NAMES } from "../utils/constants";
+import ora from "ora";
+import { CONTRACT_NAMES, ChainId, getScannerUrl } from "../utils/constants";
+import chalk from "chalk";
 import { parseEther } from "viem";
 
 export default async function deployContract(
   hre: HardhatRuntimeEnvironment,
 ): Promise<`0x${string}` | undefined> {
-  const contractName = process.env.CONTRACT_NAME as keyof typeof CONTRACT_NAMES;
+  const contractName = process.env.TOKEN_NAME as keyof typeof CONTRACT_NAMES;
 
   if (!contractName) {
-    throw new Error("CONTRACT_NAME environment variables are required.");
+    throw new Error("TOKEN_NAME environment variables are required.");
   }
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
@@ -25,16 +27,57 @@ export default async function deployContract(
   const { deploy } = hre.deployments;
 
   try {
+    console.log(chalk.blueBright(`----------------------------------------`));
+    console.log(
+      chalk.blueBright(`
+Xchange Create is deploying ${contractName} from: ${chalk.gray(
+        getScannerUrl(
+          hre.network.config.chainId ?? ChainId.HARDHAT,
+          deployer,
+          "address",
+        ),
+      )}`),
+    );
+
+    const spinner = ora(
+      chalk.yellowBright(`
+      ┌───────────────────────────────────────────────┐
+      │                                               │
+      │            Deploying your contract...         │
+      │                                               │
+      └───────────────────────────────────────────────┘
+      `),
+    ).start();
+
     const res = await deploy(contractName, {
       from: deployer,
       // Contract constructor arguments
-      args: generateArgs(contractName),
+      args: generateContractArgs(),
       log: true,
       autoMine: true,
     });
 
-    console.log("Contract deployed to:", res.address);
+    spinner.succeed(`
+${chalk.green(`Contract successfully deployed`)}
+  
+  Contract: ${chalk.gray(contractName)}
+  Address:  ${chalk.gray(
+    getScannerUrl(
+      hre.network.config.chainId ?? ChainId.HARDHAT,
+      res.address,
+      "address",
+    ),
+  )}
+  Tx:  ${chalk.gray(
+    getScannerUrl(
+      hre.network.config.chainId ?? ChainId.HARDHAT,
+      `${res.transactionHash}`,
+      "tx",
+    ),
+  )}
+  `);
 
+    console.log(chalk.blueBright(`----------------------------------------`));
     return res.address as `0x${string}`;
   } catch (error) {
     console.error("There was a problem deploying the contract:", error);
@@ -43,7 +86,7 @@ export default async function deployContract(
 
 deployContract.tags = ["deployContract"];
 
-function generateArgs(contractName: keyof typeof CONTRACT_NAMES): any[] {
+function generateContractArgs(): any[] {
   if (
     !process.env.TOKEN_NAME ||
     !process.env.TOKEN_SYMBOL ||
@@ -54,31 +97,11 @@ function generateArgs(contractName: keyof typeof CONTRACT_NAMES): any[] {
     );
   }
 
-  switch (contractName) {
-    case CONTRACT_NAMES.MOCK_ERC20:
-      return [
-        process.env.TOKEN_NAME,
-        process.env.TOKEN_SYMBOL,
-        parseEther(process.env.TOKEN_SUPPLY),
-      ];
-
-    case CONTRACT_NAMES.StandardToken:
-      return [
-        process.env.TOKEN_NAME,
-        process.env.TOKEN_SYMBOL,
-        parseEther(process.env.TOKEN_SUPPLY),
-      ];
-
-    case CONTRACT_NAMES.DeflationaryToken:
-      return [
-        process.env.TOKEN_NAME,
-        process.env.TOKEN_SYMBOL,
-        parseEther(process.env.TOKEN_SUPPLY),
-      ];
-
-    default:
-      throw new Error(`Unknown contract name: ${contractName}`);
-  }
+  return [
+    process.env.TOKEN_NAME,
+    process.env.TOKEN_SYMBOL,
+    parseEther(process.env.TOKEN_SUPPLY),
+  ];
 }
 
 deployContract.tags = ["deploy:contract"];

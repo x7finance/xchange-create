@@ -290,7 +290,7 @@ contract StandardToken is ERC20, Ownable {
         string memory symbol,
         uint256 supply
     ) Ownable() ERC20(name, symbol) {
-        _mint(address(this), supply);
+        _mint(msg.sender, supply);
         feeRecipient = msg.sender;
     }
  

@@ -62,3 +62,35 @@ export const NativeTokenContracts: Record<string, `0x${string}`> = {
   // LOCAL
   [ChainId.HARDHAT]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
 };
+
+export function getChainScanUrl(chainId: number) {
+  switch (chainId) {
+    case ChainId.ETHEREUM:
+      return "https://etherscan.io";
+    case ChainId.BSC:
+      return "https://bscscan.com";
+    case ChainId.POLYGON:
+      return "https://polygonscan.com";
+    case ChainId.ARBITRUM:
+      return "https://arbiscan.io";
+    case ChainId.OPTIMISM:
+      return "https://optimistic.etherscan.io";
+    case ChainId.BASE:
+      return "https://basescan.org";
+    case ChainId.BASE_TESTNET:
+      return "https://sepolia.basescan.org";
+    case ChainId.HARDHAT:
+      return "https://localhost:8545";
+    default:
+      throw new Error("Unsupported chain ID.");
+  }
+}
+
+export function getScannerUrl(
+  chainId: number,
+  address: string,
+  type: "address" | "tx",
+) {
+  const chainScanUrl = getChainScanUrl(chainId);
+  return `${chainScanUrl}/${type}/${address}`;
+}

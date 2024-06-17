@@ -35,8 +35,10 @@ export async function renderOutroMessage(options: Options) {
     }
 
     message += `
-    \t${chalk.bold("In a new terminal window, deploy your contracts")}
-    \t${chalk.dim("pnpm run")} deploy
+    \t${chalk.bold("In a new terminal window, get your selected contract on chain")}
+    \t${chalk.dim("pnpm run")} generate ${chalk.dim("// generates a new wallet")}
+    \t${chalk.dim("pnpm run")} account ${chalk.dim("// ensure your wallet is funded")}
+    
    `;
   }
 
