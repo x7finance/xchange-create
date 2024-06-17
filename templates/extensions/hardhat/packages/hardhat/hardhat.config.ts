@@ -14,8 +14,6 @@ import { NetworkUserConfig } from "hardhat/types";
 
 const infuraApiKey: string = `${process.env.INFURA_API_KEY}`;
 const deployerKey: string = `${process.env.DEPLOYER_PRIVATE_KEY}`;
-const mnemonic: string =
-  "taxi dash nation raw first art ticket more useful mosquito include true";
 
 const chainIds = {
   "arbitrum-mainnet": 42161,
@@ -52,7 +50,7 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
   }
 
   return {
-    accounts: [deployerKey],
+    accounts: deployerKey?.length ? [deployerKey] : [],
     chainId: chainIds[chain],
     url: jsonRpcUrl,
   };
@@ -78,13 +76,10 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: {
-        mnemonic,
-      },
       chainId: chainIds.hardhat,
     },
     ganache: {
-      accounts: [deployerKey],
+      accounts: deployerKey?.length ? [deployerKey] : [],
       chainId: chainIds.ganache,
       url: "http://127.0.0.1:8545",
     },

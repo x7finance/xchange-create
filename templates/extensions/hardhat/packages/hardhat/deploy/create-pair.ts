@@ -4,8 +4,11 @@ import {
   ChainId,
   NativeTokenContracts,
   XChangeContractsEnum,
+  getScannerUrl,
   mainnetChainIds,
 } from "../utils/constants";
+import chalk from "chalk";
+import ora from "ora";
 
 export default async function createPair(
   hre: HardhatRuntimeEnvironment,
@@ -16,6 +19,8 @@ export default async function createPair(
   const tokenA = process.env.TOKEN_ADDRESS ?? contractAddress;
   const chainId = hre.network.config.chainId?.toString() ?? ChainId.HARDHAT;
 
+  console.log(chalk.blueBright(`----------------------------------------`));
+
   if (!tokenA) {
     throw new Error("CONTRACT_ADDRESS environment variables are required.");
   }
@@ -23,6 +28,23 @@ export default async function createPair(
   if (!chainId || !(chainId in NativeTokenContracts)) {
     throw new Error("Unsupported chain ID.");
   }
+
+  console.log(
+    chalk.blueBright(`
+Creating an Xchange Pair for: ${chalk.gray(
+      getScannerUrl(
+        hre.network.config.chainId ?? ChainId.HARDHAT,
+        tokenA,
+        "address",
+      ),
+    )} and ${chalk.gray(
+      getScannerUrl(
+        hre.network.config.chainId ?? ChainId.HARDHAT,
+        NativeTokenContracts[chainId],
+        "address",
+      ),
+    )}`),
+  );
 
   const tokenB = NativeTokenContracts[chainId];
 
@@ -35,14 +57,34 @@ export default async function createPair(
     ),
   );
 
-  console.log(
-    `Creating pair for tokens ${tokenA} and ${tokenB} on Xchange factory...`,
-  );
+  const spinner = ora(
+    chalk.yellowBright(`
+    ┌───────────────────────────────────────────────┐
+    │                                               │
+    │           Creating pair for tokens            │
+    │                                               │
+    │                                               │
+    │            on Xchange factory...              │
+    │                                               │
+    └───────────────────────────────────────────────┘
+  `),
+  ).start();
 
   const createPairTx = await factory.createPair(tokenA, tokenB);
   await createPairTx.wait();
 
-  console.log("Pair created successfully: ", createPairTx.hash);
+  spinner.succeed(`
+${chalk.green(`Xchange Pair successfully created`)}
+
+  Tx: ${chalk.gray(
+    getScannerUrl(
+      hre.network.config.chainId ?? ChainId.HARDHAT,
+      createPairTx.hash,
+      "tx",
+    ),
+  )}
+  `);
+  console.log(chalk.blueBright(`----------------------------------------`));
 }
 
 createPair.tags = ["create:pair"];

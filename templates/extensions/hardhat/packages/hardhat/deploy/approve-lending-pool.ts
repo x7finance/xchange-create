@@ -5,22 +5,25 @@ import {
   CONTRACT_NAMES,
   ChainId,
   XChangeContractsEnum,
+  getScannerUrl,
   mainnetChainIds,
 } from "../utils/constants";
+import chalk from "chalk";
+import ora from "ora";
 
 export default async function approveLendingPool(
   hre: HardhatRuntimeEnvironment,
   contractA: `0x${string}`,
 ) {
   const { ethers } = hre;
-
+  console.log(chalk.blueBright(`----------------------------------------`));
   const chainId = hre.network.config.chainId?.toString() ?? ChainId.HARDHAT;
   const contractName = process.env.TOKEN_NAME as keyof typeof CONTRACT_NAMES;
   const contractAddress = process.env.TOKEN_ADDRESS ?? contractA;
 
   if (!contractName || !contractAddress) {
     throw new Error(
-      "CONTRACT_NAME and CONTRACT_ADDRESS environment variables are required.",
+      "TOKEN_NAME and CONTRACT_ADDRESS environment variables are required.",
     );
   }
 
@@ -30,10 +33,20 @@ export default async function approveLendingPool(
   );
 
   console.log(
-    `Approving lending pool ${XChangeContractsEnum.XCHANGE_LENDING_POOL_ADDRESS(
-      chainId as (typeof mainnetChainIds)[number],
-    )} to spend the maximum amount of tokens...`,
+    chalk.blueBright(`
+Approving X7 Lending Pool for maxiumum tokens to fund liquidity`),
   );
+
+  const spinner = ora(
+    chalk.yellow(`
+  ┌───────────────────────────────────────────────┐
+  │                                               │
+  │    Approving X7 Lending Pool to spend the     │
+  │           maximum amount of tokens            │
+  │                                               │
+  └───────────────────────────────────────────────┘
+`),
+  ).start();
 
   const approveTx = await tokenContract.approve(
     XChangeContractsEnum.XCHANGE_LENDING_POOL_ADDRESS(
@@ -41,12 +54,22 @@ export default async function approveLendingPool(
     ),
     APPROVAL_AMOUNT,
   );
+
   await approveTx.wait();
 
-  console.log(
-    "X7 Lending Pool approved as spender with the maximum amount.: ",
-    approveTx.hash,
-  );
+  spinner.succeed(`
+${chalk.green("X7 Lending Pool approved as spender with the maximum amount")}
+
+  Tx: ${chalk.gray(
+    getScannerUrl(
+      hre.network.config.chainId ?? ChainId.HARDHAT,
+      approveTx.hash,
+      "tx",
+    ),
+  )}
+`);
+
+  console.log(chalk.blueBright(`----------------------------------------`));
 }
 
 approveLendingPool.tags = ["approve:lendingpool"];
