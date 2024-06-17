@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "husky": "~8.0.3",
-    "lint-staged": "~13.2.2",
-    "next": "15.0.0-canary.9",
+    "lint-staged": "~15.2.7",
+    "next": "15.0.0-canary.33",
     "vercel": "~32.4.1"
   },
   "engines": {

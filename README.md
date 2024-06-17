@@ -49,7 +49,7 @@ This command starts a local Ethereum network using Hardhat or Foundry, depending
 3. On a second terminal, deploy the test contract:
 
 ```
-pnpm run deploy
+pnpm run task deploy:all
 ```
 
 This command deploys a test smart contract to the local network. The contract can be modified to suit your needs. Is located in:
@@ -88,41 +88,11 @@ pnpm run chain
 
 # deploy all
 pnpm run task deploy:all
+
+# nextjs run front-end
+pnpm run next:format && pnpm run next:check-types && pnpm run next:lint && pnpm run next:build && pnpm run start
 ```
 
 
 
-```bash
-# setup
-pnpm install && pnpm run generate
 
-# nextjs
-pnpm run next:format && pnpm run next:check-types && pnpm run next:lint && pnpm run next:build
-
-# local
-pnpm run chain # needs separate shell
-pnpm run account
-
-# individual deployment commands
-
-# with all the parameters
-
-# deploy contract
-TOKEN_NAME="MyToken" TOKEN_SYMBOL="MTK" TOKEN_SUPPLY="2000000" CONTRACT_NAME=StandardToken pnpm run task deploy:contract
-
-# create a pair on Xchange, with chain native denomination
-CONTRACT_ADDRESS="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" pnpm run task create:pair
-
-# approve the lending pool
-CONTRACT_NAME=StandardToken CONTRACT_ADDRESS="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" pnpm run task approve:lendingpool
-
-# take a loan via the X7 Lending Pool
-CONTRACT_ADDRESS="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512" \
-AMOUNT="1000" \
-LOAN_TERM_CONTRACT_ADDRESS="0xd95f799276A8373F7F234A7F211DE9E3a0ae6639" \
-LOAN_AMOUNT="500" \
-LOAN_DURATION="2592000" \
-DEADLINE="1234567890" \
-PAYABLE_AMOUNT="0.1" \
-pnpm run task initiate:loan
-```
