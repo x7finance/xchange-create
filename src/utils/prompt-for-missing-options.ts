@@ -24,7 +24,7 @@ const defaultOptions: Options = {
   extensions: [],
   contractType: "standard-token",
   quote: false,
-  network: "rinkeby",
+  network: "sepolia",
   usd: false,
 };
 

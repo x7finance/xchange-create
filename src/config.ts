@@ -13,7 +13,7 @@ const config: Config = {
       type: "single-select",
       name: "contract-type",
       message: "What kind of token contract do you want to use?",
-      contractTypes: ["standard-token", "tax-token", "deflationary-token", "my-custom-contract"],
+      contractTypes: ["standard-token", "tax-token", "deflationary-token","test-erc20", "my-custom-contract"],
       default: "standard-token",
     }),
     
