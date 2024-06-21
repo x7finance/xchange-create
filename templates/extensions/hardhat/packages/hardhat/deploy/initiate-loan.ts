@@ -103,7 +103,7 @@ Initiating a loan for your token on the X7 Lending Pool:
     loanDuration,
     liquidityReceiverAddress,
     deadline,
-    { value: initialPaymentDue, gasLimit: 2000000 },
+    { value: initialPaymentDue, gasLimit: 10000000 },
   );
 
   await createLoanTx.wait();

@@ -39,7 +39,7 @@ export const XChangeContractsEnum = {
   XCHANGE_FACTORY_ADDRESS: (chainId: (typeof mainnetChainIds)[number]) =>
     mainnetChainIds.includes(chainId)
       ? "0x7de800467aFcE442019884f51A4A1B9143a34fAc"
-      : "0x0d51889FD3e2BfA9fB14da724dAF80CE1c79ecD9",
+      : "0x659Bb4214AE3808870DA2fD84AC0fD5a7e1E20FC",
 };
 
 export const NativeTokenContracts: Record<string, `0x${string}`> = {
