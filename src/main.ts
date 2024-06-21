@@ -103,9 +103,9 @@ export async function createProject(options: Options) {
         const updatedConstantsContent = constantsContent.replace(
           /export const CONTRACT_NAMES = {[^}]*}/,
           `export const CONTRACT_NAMES = {
-            MOCK_ERC20: "MockERC20",
             StandardToken: "StandardToken",
             DeflationaryToken: "DeflationaryToken",
+            MockERC20: "MockERC20",
             ${options.project}: "${options.project}",
           };`
         );

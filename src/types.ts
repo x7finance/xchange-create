@@ -1,7 +1,7 @@
 import type { Question } from "inquirer";
 
 export type Args = string[];
-export type Network = 'mainnet' | 'rinkeby' | 'ropsten' | 'kovan' | 'goerli' | 'bsc' | 'polygon' | 'arbitrum' | 'optimism';
+export type Network = 'mainnet' | 'sepolia' | 'bsc' | 'polygon' | 'arbitrum' | 'optimism';
 
 export type RawOptions = {
   project: string | null;
@@ -29,6 +29,7 @@ export type ContractType =
   | "standard-token"
   | "tax-token"
   | "deflationary-token"
+  | "test-erc20"
   | "my-custom-contract";
 
 type NullExtension = null;

@@ -26,7 +26,7 @@ export async function displayQuote(options: Options) {
   }
 
   if (!isValidContractType(contractType)) {
-    console.error(`Error: Unsupported contract type "${contractType}". Supported contract types are: standard-token, tax-token, deflationary-token, my-custom-contract.`);
+    console.error(`Error: Unsupported contract type "${contractType}". Supported contract types are: standard-token, tax-token, deflationary-token, test-erc20, my-custom-contract.`);
     return;
   }
 

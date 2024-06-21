@@ -14,13 +14,10 @@ export type ChainWithAttributes = chains.Chain & Partial<ChainAttributes>
 // Mapping of chainId to RPC chain name an format followed by alchemy and infura
 export const RPC_CHAIN_NAMES: Record<number, string> = {
   [chains.mainnet.id]: "eth-mainnet",
-  [chains.goerli.id]: "eth-goerli",
   [chains.sepolia.id]: "eth-sepolia",
   [chains.optimism.id]: "opt-mainnet",
-  [chains.optimismGoerli.id]: "opt-goerli",
   [chains.optimismSepolia.id]: "opt-sepolia",
   [chains.arbitrum.id]: "arb-mainnet",
-  [chains.arbitrumGoerli.id]: "arb-goerli",
   [chains.arbitrumSepolia.id]: "arb-sepolia",
   [chains.polygon.id]: "polygon-mainnet",
   [chains.polygonAmoy.id]: "polygon-amoy",
@@ -28,7 +25,6 @@ export const RPC_CHAIN_NAMES: Record<number, string> = {
   [chains.polygonZkEvm.id]: "polygonzkevm-mainnet",
   [chains.polygonZkEvmTestnet.id]: "polygonzkevm-testnet",
   [chains.base.id]: "base-mainnet",
-  [chains.baseGoerli.id]: "base-goerli",
   [chains.baseSepolia.id]: "base-sepolia",
 }
 

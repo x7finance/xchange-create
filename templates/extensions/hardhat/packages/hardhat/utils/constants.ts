@@ -1,7 +1,7 @@
 export const CONTRACT_NAMES = {
-  MOCK_ERC20: "MockERC20",
   StandardToken: "StandardToken",
   DeflationaryToken: "DeflationaryToken",
+  MockERC20: "MockERC20",
 };
 
 export const APPROVAL_AMOUNT =
@@ -9,10 +9,6 @@ export const APPROVAL_AMOUNT =
 
 export const ChainId = {
   ETHEREUM: 1,
-  ROPSTEN: 3,
-  RINKEBY: 4,
-  GOERLI: 5,
-  KOVAN: 42,
   BSC: 56,
   BSC_TESTNET: 97,
   POLYGON: 137,

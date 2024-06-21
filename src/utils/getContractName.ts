@@ -9,6 +9,8 @@ export function getContractName(contractType: ContractType): keyof typeof CONTRA
       return "StandardToken"; // Assuming tax-token also uses StandardToken
     case "deflationary-token":
       return "DeflationaryToken";
+    case "test-erc20":
+      return "MockERC20";
     case "my-custom-contract":
       return undefined; // Return undefined for custom contracts
     default:
