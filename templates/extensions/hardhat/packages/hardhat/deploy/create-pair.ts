@@ -52,9 +52,7 @@ Creating an Xchange Pair for: ${chalk.gray(
 
     const factory: any = await ethers.getContractAt(
       factoryAbi,
-      XChangeContractsEnum.XCHANGE_FACTORY_ADDRESS(
-        chainId as (typeof mainnetChainIds)[number],
-      ),
+      XChangeContractsEnum.XCHANGE_FACTORY_ADDRESS,
     );
 
     const spinner = ora(

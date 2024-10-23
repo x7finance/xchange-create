@@ -49,9 +49,7 @@ Approving X7 Lending Pool for maxiumum tokens to fund liquidity`),
   ).start();
 
   const approveTx = await tokenContract.approve(
-    XChangeContractsEnum.XCHANGE_LENDING_POOL_ADDRESS(
-      chainId as (typeof mainnetChainIds)[number],
-    ),
+    XChangeContractsEnum.X7_LendingPool(chainId),
     APPROVAL_AMOUNT,
   );
 
