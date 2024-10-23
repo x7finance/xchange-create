@@ -4,30 +4,30 @@ import {
   installPackages,
   createFirstGitCommit,
   prettierFormat,
-} from "./tasks";
-import type { Options } from "./types";
-import { renderOutroMessage } from "./utils/render-outro-message";
-import chalk from "chalk";
-import Listr from "listr";
-import path from "path";
-import { getContractName } from "./utils/getContractName";
-import { fileURLToPath } from "url";
-import { parse, stringify } from "envfile";
-import * as fs from "fs";
+} from "./tasks"
+import type { Options } from "./types"
+import { renderOutroMessage } from "./utils/render-outro-message"
+import chalk from "chalk"
+import Listr from "listr"
+import path from "path"
+import { getContractName } from "./utils/getContractName"
+import { fileURLToPath } from "url"
+import { parse, stringify } from "envfile"
+import * as fs from "fs"
 
 export async function createProject(options: Options) {
-  console.log(`\n`);
+  console.log(`\n`)
 
-  const currentFileUrl = import.meta.url;
+  const currentFileUrl = import.meta.url
 
   const templateDirectory = path.resolve(
     decodeURI(fileURLToPath(currentFileUrl)),
     "../../templates"
-  );
+  )
 
-  const targetDirectory = path.resolve(process.cwd(), options.project);
+  const targetDirectory = path.resolve(process.cwd(), options.project)
 
-  const envFilePath = path.join(targetDirectory, "packages", "hardhat", ".env");
+  const envFilePath = path.join(targetDirectory, "packages", "hardhat", ".env")
 
   const tasks = new Listr([
     {
@@ -46,7 +46,7 @@ export async function createProject(options: Options) {
       task: () => {
         const existingEnvConfig = fs.existsSync(envFilePath)
           ? parse(fs.readFileSync(envFilePath, "utf8"))
-          : {};
+          : {}
 
         const newEnvConfig = {
           ...existingEnvConfig,
@@ -56,13 +56,14 @@ export async function createProject(options: Options) {
           TOKEN_SUPPLY_PAIRED: options.supply,
           DEPLOYER_PRIVATE_KEY: "",
           CONTRACT_NAME: getContractName(options.contractType),
-          LOAN_TERM_CONTRACT_ADDRESS: "0xd95f799276A8373F7F234A7F211DE9E3a0ae6639",
+          LOAN_TERM_CONTRACT_ADDRESS:
+            "0xd95f799276A8373F7F234A7F211DE9E3a0ae6639",
           LOAN_AMOUNT: 0.5,
-          INITIAL_PAYMENT_DUE: 0.11
-        };
+          INITIAL_PAYMENT_DUE: 0.11,
+        }
 
-        fs.writeFileSync(envFilePath, stringify(newEnvConfig));
-        
+        fs.writeFileSync(envFilePath, stringify(newEnvConfig))
+
         // Rename the contract file to the TOKEN_NAME in the new project directory
         const contractFilePath = path.join(
           targetDirectory,
@@ -70,26 +71,26 @@ export async function createProject(options: Options) {
           "hardhat",
           "contracts",
           `${getContractName(options.contractType)}.sol`
-        );
+        )
         const newContractFilePath = path.join(
           path.dirname(contractFilePath),
           `${options.project}.sol`
-        );
+        )
 
         // Read the contents of the contract file
-        const contractContent = fs.readFileSync(contractFilePath, "utf8");
+        const contractContent = fs.readFileSync(contractFilePath, "utf8")
 
         // Replace the contract name in the file contents
         const updatedContractContent = contractContent.replace(
           new RegExp(`contract ${getContractName(options.contractType)}`, "g"),
           `contract ${options.project}`
-        );
+        )
 
         // Write the updated contents to the new contract file
-        fs.writeFileSync(newContractFilePath, updatedContractContent);
+        fs.writeFileSync(newContractFilePath, updatedContractContent)
 
         // Remove the original contract file
-        fs.unlinkSync(contractFilePath);
+        fs.unlinkSync(contractFilePath)
 
         // Update the CONTRACT_NAMES export in the new project directory
         const constantsFilePath = path.join(
@@ -98,8 +99,8 @@ export async function createProject(options: Options) {
           "hardhat",
           "utils",
           "constants.ts"
-        );
-        const constantsContent = fs.readFileSync(constantsFilePath, "utf8");
+        )
+        const constantsContent = fs.readFileSync(constantsFilePath, "utf8")
         const updatedConstantsContent = constantsContent.replace(
           /export const CONTRACT_NAMES = {[^}]*}/,
           `export const CONTRACT_NAMES = {
@@ -108,8 +109,8 @@ export async function createProject(options: Options) {
             MockERC20: "MockERC20",
             ${options.project}: "${options.project}",
           };`
-        );
-        fs.writeFileSync(constantsFilePath, updatedConstantsContent);
+        )
+        fs.writeFileSync(constantsFilePath, updatedConstantsContent)
       },
     },
     {
@@ -117,7 +118,7 @@ export async function createProject(options: Options) {
       task: () => installPackages(targetDirectory),
       skip: () => {
         if (!options.install) {
-          return "Manually skipped";
+          return "Manually skipped"
         }
       },
     },
@@ -126,7 +127,7 @@ export async function createProject(options: Options) {
       task: () => prettierFormat(targetDirectory),
       skip: () => {
         if (!options.install) {
-          return "Skipping because prettier install was skipped";
+          return "Skipping because prettier install was skipped"
         }
       },
     },
@@ -136,13 +137,13 @@ export async function createProject(options: Options) {
       }`,
       task: () => createFirstGitCommit(targetDirectory, options),
     },
-  ]);
+  ])
 
   try {
-    await tasks.run();
-    renderOutroMessage(options);
+    await tasks.run()
+    renderOutroMessage(options)
   } catch (error) {
-    console.log("%s Error occurred", chalk.red.bold("ERROR"), error);
-    console.log("%s Exiting...", chalk.red.bold("Uh oh! 😕 Sorry about that!"));
+    console.log("%s Error occurred", chalk.red.bold("ERROR"), error)
+    console.log("%s Exiting...", chalk.red.bold("Uh oh! 😕 Sorry about that!"))
   }
 }

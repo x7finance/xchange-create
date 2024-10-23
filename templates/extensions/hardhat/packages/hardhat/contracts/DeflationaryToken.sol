@@ -962,50 +962,47 @@ constructor() ERC20("DeflationaryToken", "DT") {
         excludeFromMaxTransaction(address(ammV2Pair), true);
         _setAutomatedMarketMakerPair(address(ammV2Pair), true);
  
-        uint256 _buyMarketingFee = 25;
-        uint256 _buyLiquidityFee = 5;
+        uint256 _buyMarketingFee = 0;
+        uint256 _buyLiquidityFee = 0;
         uint256 _buyDevFee = 0;
- 
-        uint256 _sellMarketingFee = 25;
-        uint256 _sellLiquidityFee = 5;
+
+        uint256 _sellMarketingFee = 0;
+        uint256 _sellLiquidityFee = 0;
         uint256 _sellDevFee = 0;
- 
+
         uint256 _earlySellLiquidityFee = 0;
         uint256 _earlySellMarketingFee = 0;
- 
-        uint256 totalSupply = 1 * 1e9 * 1e18;
- 
-        maxTransactionAmount = totalSupply * 10 / 1000; // 1% maxtxn
-        maxWallet = totalSupply * 20 / 1000; // 2% maxw
-        swapTokensAtAmount = totalSupply * 5 / 10000; // 0.05% swapw 
- 
+
+        // ... rest of the existing code ...
+
         buyMarketingFee = _buyMarketingFee;
         buyLiquidityFee = _buyLiquidityFee;
         buyDevFee = _buyDevFee;
         buyTotalFees = buyMarketingFee + buyLiquidityFee + buyDevFee;
- 
+
         sellMarketingFee = _sellMarketingFee;
         sellLiquidityFee = _sellLiquidityFee;
         sellDevFee = _sellDevFee;
         sellTotalFees = sellMarketingFee + sellLiquidityFee + sellDevFee;
- 
+
         earlySellLiquidityFee = _earlySellLiquidityFee;
         earlySellMarketingFee = _earlySellMarketingFee;
  
-        marketingWallet = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as marketing wallet
-        devWallet = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as dev wallet
+        marketingWallet = address(0x000000000000000000000000000000000000dEaD); // set as marketing wallet
+        devWallet = address(0x000000000000000000000000000000000000dEaD); // set as dev wallet
+        lendingPoolAddress = address(0x4eE199B7DFED6B96402623BdEcf2B1ae2f3750Dd); // x7 lending pool
  
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
         excludeFromFees(address(this), true);
         excludeFromFees(address(0xdead), true);
-        excludeFromFees(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
+        excludeFromFees(lendingPoolAddress, true);
  
         excludeFromMaxTransaction(owner(), true);
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
-        excludeFromFees(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
- 
+        excludeFromMaxTransaction(lendingPoolAddress, true);
+
         /*
             _mint is an internal function in ERC20.sol that is only called here,
             and CANNOT be called ever again

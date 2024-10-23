@@ -37,7 +37,9 @@ export default async function initiateLoan(
 
   // Loan duration
   ///////////////// hours * min * sec
-  const loanDuration = 24 * 60 * 60; // 24 hours in seconds
+  const loanDuration = process.env.LOAN_DURATION
+    ? parseInt(process.env.LOAN_DURATION)
+    : 24 * 60 * 60; // 24 hours in seconds
   const now = Math.floor(Date.now() / 1000);
   const deadline = now + loanDuration;
 
@@ -79,9 +81,7 @@ Initiating a loan for your token on the X7 Lending Pool:
 
   const lendingPool = await ethers.getContractAt(
     LendingPoolABI,
-    XChangeContractsEnum.XCHANGE_LENDING_POOL_ADDRESS(
-      chainId as (typeof mainnetChainIds)[number],
-    ),
+    XChangeContractsEnum.X7_LendingPool(chainId),
   );
 
   const spinner = ora(
@@ -132,7 +132,7 @@ ${chalk.green("Loan created and pool funded successfully")}
     ),
   )}
   Xchange Trading: ${chalk.gray(
-    `https://localhost:3000/?chainId=${chainId}&token0=NATIVE&token1=${contractAddress}`,
+    `https://x7finance.org/?chainId=${chainId}&token0=NATIVE&token1=${contractAddress}`,
   )}
 `),
   );
