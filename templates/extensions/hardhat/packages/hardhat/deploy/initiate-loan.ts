@@ -6,7 +6,6 @@ import {
   ChainId,
   XChangeContractsEnum,
   getScannerUrl,
-  mainnetChainIds,
 } from "../utils/constants";
 import chalk from "chalk";
 import ora from "ora";
@@ -26,7 +25,9 @@ export default async function initiateLoan(
   const liquidityReceiverAddress = process.env.DEPLOYER_ADDRESS;
 
   // loan related terms
-  const loanTermContractAddress = process.env.LOAN_TERM_CONTRACT_ADDRESS;
+  const loanTermContractAddress =
+    process.env.LOAN_TERM_CONTRACT_ADDRESS ??
+    XChangeContractsEnum.X7InitialLiquidityLoanTerm005(chainId as ChainId);
   const loanAmount = process.env.LOAN_AMOUNT
     ? parseEther(process.env.LOAN_AMOUNT)
     : toHex(0);
@@ -39,7 +40,7 @@ export default async function initiateLoan(
   ///////////////// hours * min * sec
   const loanDuration = process.env.LOAN_DURATION
     ? parseInt(process.env.LOAN_DURATION)
-    : 24 * 60 * 60; // 24 hours in seconds
+    : 24 * 60 * 60 * 3; // 3 days in seconds
   const now = Math.floor(Date.now() / 1000);
   const deadline = now + loanDuration;
 

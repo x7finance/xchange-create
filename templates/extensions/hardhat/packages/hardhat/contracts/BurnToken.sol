@@ -3,6 +3,7 @@
     The contract is an ERC20 true burn token contract.
     Rather then burning tokens by sending to a dead address, it will reduce the total supply
     as trading happens on the contract.
+
     Website: website.com
     Twitter: x.com/slug
     Telegram: t.me/slug

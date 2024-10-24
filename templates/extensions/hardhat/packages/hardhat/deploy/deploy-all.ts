@@ -8,7 +8,14 @@ export default async function deployAll(hre: HardhatRuntimeEnvironment) {
   const contractAddress = await deployContract(hre);
 
   if (contractAddress) {
-    await createPair(hre, contractAddress);
+    // if the contract type is BurnToken, DeflationaryToken or TaxToken, it's not necessary to create a pair, that happens in the contract creation
+    if (
+      !["BurnToken", "DeflationaryToken", "TaxToken"].includes(
+        process.env.CONTRACT_TYPE as string,
+      )
+    ) {
+      await createPair(hre, contractAddress);
+    }
     await approveLendingPool(hre, contractAddress);
     await takeLoan(hre, contractAddress);
   } else {

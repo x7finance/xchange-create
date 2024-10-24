@@ -10,7 +10,7 @@ import { renderOutroMessage } from "./utils/render-outro-message"
 import chalk from "chalk"
 import Listr from "listr"
 import path from "path"
-import { getContractName } from "./utils/getContractName"
+import { getContractType } from "./utils/getContractType"
 import { fileURLToPath } from "url"
 import { parse, stringify } from "envfile"
 import * as fs from "fs"
@@ -54,10 +54,9 @@ export async function createProject(options: Options) {
           TOKEN_SYMBOL: options.ticker,
           TOKEN_SUPPLY: options.supply.toString(),
           TOKEN_SUPPLY_PAIRED: options.supply,
+          DEPLOY_CHAIN: options.deployChain,
           DEPLOYER_PRIVATE_KEY: "",
-          CONTRACT_NAME: getContractName(options.contractType),
-          LOAN_TERM_CONTRACT_ADDRESS:
-            "0xd95f799276A8373F7F234A7F211DE9E3a0ae6639",
+          CONTRACT_TYPE: getContractType(options.contractType),
           LOAN_AMOUNT: 0.5,
           INITIAL_PAYMENT_DUE: 0.11,
         }
@@ -70,11 +69,11 @@ export async function createProject(options: Options) {
           "packages",
           "hardhat",
           "contracts",
-          `${getContractName(options.contractType)}.sol`
+          `${getContractType(options.contractType)}.sol`
         )
         const newContractFilePath = path.join(
           path.dirname(contractFilePath),
-          `${options.project}.sol`
+          `${options.ticker}.sol`
         )
 
         // Read the contents of the contract file
@@ -82,7 +81,7 @@ export async function createProject(options: Options) {
 
         // Replace the contract name in the file contents
         const updatedContractContent = contractContent.replace(
-          new RegExp(`contract ${getContractName(options.contractType)}`, "g"),
+          new RegExp(`contract ${getContractType(options.contractType)}`, "g"),
           `contract ${options.project}`
         )
 
@@ -92,7 +91,7 @@ export async function createProject(options: Options) {
         // Remove the original contract file
         fs.unlinkSync(contractFilePath)
 
-        // Update the CONTRACT_NAMES export in the new project directory
+        // Update the CREATED_CONTRACTS export in the new project directory
         const constantsFilePath = path.join(
           targetDirectory,
           "packages",
@@ -102,13 +101,10 @@ export async function createProject(options: Options) {
         )
         const constantsContent = fs.readFileSync(constantsFilePath, "utf8")
         const updatedConstantsContent = constantsContent.replace(
-          /export const CONTRACT_NAMES = {[^}]*}/,
-          `export const CONTRACT_NAMES = {
-            StandardToken: "StandardToken",
-            DeflationaryToken: "DeflationaryToken",
-            MockERC20: "MockERC20",
+          /export const CREATED_CONTRACTS: Record<string, string> = {[^}]*}/,
+          `export const CREATED_CONTRACTS: Record<string, string> = {
             ${options.project}: "${options.project}",
-          };`
+          }`
         )
         fs.writeFileSync(constantsFilePath, updatedConstantsContent)
       },

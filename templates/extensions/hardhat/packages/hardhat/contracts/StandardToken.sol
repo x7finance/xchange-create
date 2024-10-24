@@ -1,8 +1,4 @@
 /**
- *Submitted for verification at Etherscan.io on 2024-05-05
-*/
-
-/**
     StandardToken Contract
     (Launches will start with a 20% Buy/Sell Fee, and a max transaction/wallet limit to prevent bots and snipers.)
     (Fees will eventually be reduced to 0%, walletlimitations disabled and the Contract renounced.)

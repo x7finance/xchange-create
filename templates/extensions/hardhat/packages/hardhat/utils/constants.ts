@@ -1,8 +1,12 @@
-export const CONTRACT_NAMES = {
-  StandardToken: "StandardToken",
+export const CONTRACT_TYPES = {
+  BurnToken: "BurnToken",
   DeflationaryToken: "DeflationaryToken",
-  MockERC20: "MockERC20",
+  ReflectionToken: "ReflectionToken",
+  StandardToken: "StandardToken",
+  TaxToken: "TaxToken",
 };
+
+export const CREATED_CONTRACTS: Record<string, string> = {};
 
 export const APPROVAL_AMOUNT =
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
@@ -66,6 +70,26 @@ export const XChangeContractsEnum = {
         return "0xA377d8B82dF8b3EE1fd849BA231F036db5eE8d83";
       default:
         throw new Error(`Unsupported chain ID: ${chainId}`);
+    }
+  },
+  X7InitialLiquidityLoanTerm005: (chainId: ChainId): `0x${string}` => {
+    switch (chainId) {
+      case ChainId.ETHEREUM:
+      case ChainId.BASE:
+      case ChainId.BSC:
+      case ChainId.POLYGON:
+      case ChainId.ARBITRUM:
+      case ChainId.OPTIMISM:
+        return "0x90482AD3aa56675ba313dAC14C3a7717bAD5B24D";
+      case ChainId.ETHEREUM_TESTNET:
+      case ChainId.BASE_TESTNET:
+      case ChainId.POLYGON_TESTNET:
+      case ChainId.ARBITRUM_TESTNET:
+      case ChainId.OPTIMISM_TESTNET:
+      case ChainId.BSC_TESTNET:
+        return "0x97dD34dF320CC490A071b794756423e2bE7D4B3b";
+      default:
+        throw new Error(`Unsupported chainId: ${chainId}`);
     }
   },
   XCHANGE_FACTORY_ADDRESS: "0x8B76C05676D205563ffC1cbd11c0A6e3d83929c5",

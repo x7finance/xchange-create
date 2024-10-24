@@ -1,65 +1,68 @@
-import type { Question } from "inquirer";
+import type { Question } from "inquirer"
+import { ChainId } from "./utils/consts"
 
-export type Args = string[];
-export type Network = 'mainnet' | 'sepolia' | 'bsc' | 'polygon' | 'arbitrum' | 'optimism';
+export type Args = string[]
 
 export type RawOptions = {
-  project: string | null;
-  ticker: string | null;
-  supply: number | null;
-  install: boolean | null;
-  dev: boolean;
-  extensions: Extension[] | null;
-  contractType: ContractType | null;
-  help?: boolean;
-  usd?: boolean;
-  quote: boolean;
-  network: Network | null;
-};
+  project: string | null
+  ticker: string | null
+  supply: number | null
+  install: boolean | null
+  dev: boolean
+  extensions: Extension[] | null
+  contractType: ContractType | null
+  help?: boolean
+  usd?: boolean
+  quote: boolean
+  deployChain: ChainId | null
+}
 
 type NonNullableRawOptions = {
-  [Prop in keyof RawOptions]: NonNullable<RawOptions[Prop]>;
-};
+  [Prop in keyof RawOptions]: NonNullable<RawOptions[Prop]>
+}
 
-export type Options = NonNullableRawOptions;
+export type Options = NonNullableRawOptions
 
-export type Extension = "hardhat" | "foundry";
+export type Extension = "hardhat" | "foundry"
 
 export type ContractType =
   | "standard-token"
   | "tax-token"
   | "deflationary-token"
   | "test-erc20"
-  | "my-custom-contract";
+  | "my-custom-contract"
 
-type NullExtension = null;
-export type ExtensionOrNull = Extension | NullExtension;
+type NullExtension = null
+export type ExtensionOrNull = Extension | NullExtension
 
 // corresponds to inquirer question types:
 //  - multi-select -> checkbox
 //  - single-select -> list
-type QuestionType = "multi-select" | "single-select";
-export interface ExtensionQuestion<T extends ExtensionOrNull[] = ExtensionOrNull[]> {
-  type: QuestionType;
-  extensions: T;
-  name: string;
-  message: Question["message"];
-  default?: T[number];
+type QuestionType = "multi-select" | "single-select"
+export interface ExtensionQuestion<
+  T extends ExtensionOrNull[] = ExtensionOrNull[]
+> {
+  type: QuestionType
+  extensions: T
+  name: string
+  message: Question["message"]
+  default?: T[number]
 }
 
 export interface ContractTypeQuestion {
-  type: "single-select";
-  contractTypes: ContractType[];
-  name: string;
-  message: Question["message"];
-  default?: ContractType;
+  type: "single-select"
+  contractTypes: ContractType[]
+  name: string
+  message: Question["message"]
+  default?: ContractType
 }
 
 export const isExtension = (item: ExtensionOrNull): item is Extension =>
-  item !== null;
+  item !== null
 
-export const isContractType = (item: ContractType | null): item is ContractType =>
-  item !== null;
+export const isContractType = (
+  item: ContractType | null
+): item is ContractType => item !== null
 
 /**
  * This function makes sure that the `T` generic type is narrowed down to
@@ -72,44 +75,43 @@ export const isContractType = (item: ContractType | null): item is ContractType 
  */
 export const typedQuestion = <T extends ExtensionOrNull[]>(
   question: ExtensionQuestion<T>
-) => question;
+) => question
 
-export const typedContractTypeQuestion = (
-  question: ContractTypeQuestion
-) => question;
+export const typedContractTypeQuestion = (question: ContractTypeQuestion) =>
+  question
 
 export type Config = {
-  questions: (ExtensionQuestion | ContractTypeQuestion)[];
-};
+  questions: (ExtensionQuestion | ContractTypeQuestion)[]
+}
 
 export const isDefined = <T>(item: T | undefined | null): item is T =>
-  item !== undefined && item !== null;
+  item !== undefined && item !== null
 
 export type ExtensionDescriptor = {
-  name: string;
-  value: Extension;
-  path: string;
-  extensions?: Extension[];
-  extends?: Extension;
-};
+  name: string
+  value: Extension
+  path: string
+  extensions?: Extension[]
+  extends?: Extension
+}
 
 export type ExtensionBranch = ExtensionDescriptor & {
-  extensions: Extension[];
-};
+  extensions: Extension[]
+}
 
 export type ExtensionDict = {
-  [extension in Extension]: ExtensionDescriptor;
-};
+  [extension in Extension]: ExtensionDescriptor
+}
 
 export const extensionWithSubextensions = (
   extension: ExtensionDescriptor | undefined
 ): extension is ExtensionBranch => {
-  return Object.prototype.hasOwnProperty.call(extension, "extensions");
-};
+  return Object.prototype.hasOwnProperty.call(extension, "extensions")
+}
 
 export type TemplateDescriptor = {
-  path: string;
-  fileUrl: string;
-  relativePath: string;
-  source: string;
-};
+  path: string
+  fileUrl: string
+  relativePath: string
+  source: string
+}
