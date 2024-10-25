@@ -14,6 +14,7 @@ import { getContractType } from "./utils/getContractType"
 import { fileURLToPath } from "url"
 import { parse, stringify } from "envfile"
 import * as fs from "fs"
+import { ChainId, XChangeContractsEnum } from "./utils/consts"
 
 export async function createProject(options: Options) {
   console.log(`\n`)
@@ -56,6 +57,7 @@ export async function createProject(options: Options) {
           TOKEN_SUPPLY_PAIRED: options.supply,
           DEPLOY_CHAIN: options.deployChain,
           DEPLOYER_PRIVATE_KEY: "",
+          ALCHEMY_API_KEY: "vN7gpCr7Q-WLGvHd19As0QXHJrOGvBZd",
           CONTRACT_TYPE: getContractType(options.contractType),
           LOAN_AMOUNT: 0.5,
           INITIAL_PAYMENT_DUE: 0.11,
@@ -79,16 +81,34 @@ export async function createProject(options: Options) {
         // Read the contents of the contract file
         const contractContent = fs.readFileSync(contractFilePath, "utf8")
 
-        // Replace the contract name in the file contents
-        const updatedContractContent = contractContent.replace(
-          new RegExp(`contract ${getContractType(options.contractType)}`, "g"),
-          `contract ${options.project}`
-        )
+        let updatedContractContent = contractContent
+          // Replace contract name
+          .replace(
+            new RegExp(
+              `contract ${getContractType(options.contractType)}`,
+              "g"
+            ),
+            `contract ${options.project}`
+          )
+          // Replace lending pool address
+          .replace(
+            new RegExp(
+              XChangeContractsEnum.X7_LendingPool(ChainId.ETHEREUM),
+              "g"
+            ),
+            XChangeContractsEnum.X7_LendingPool(options.deployChain)
+          )
+          // Replace router address
+          .replace(
+            new RegExp(
+              XChangeContractsEnum.XchangeRouter(ChainId.ETHEREUM),
+              "g"
+            ),
+            XChangeContractsEnum.XchangeRouter(options.deployChain)
+          )
 
-        // Write the updated contents to the new contract file
+        // Write updated content and cleanup
         fs.writeFileSync(newContractFilePath, updatedContractContent)
-
-        // Remove the original contract file
         fs.unlinkSync(contractFilePath)
 
         // Update the CREATED_CONTRACTS export in the new project directory

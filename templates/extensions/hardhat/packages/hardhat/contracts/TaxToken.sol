@@ -953,7 +953,7 @@ contract TaxToken is ERC20, Ownable {
  
 constructor() ERC20("TaxToken", "TAX") {
  
-        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x7DE80da14460A72855d597a4bCa2C10925373000);
+        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
  
         excludeFromMaxTransaction(address(_xchangeV2Router), true);
         xchangeV2Router = _xchangeV2Router;
@@ -1004,7 +1004,7 @@ constructor() ERC20("TaxToken", "TAX") {
         excludeFromMaxTransaction(owner(), true);
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
-        excludeFromFees(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
+        excludeFromMaxTransaction(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
  
         /*
             _mint is an internal function in ERC20.sol that is only called here,

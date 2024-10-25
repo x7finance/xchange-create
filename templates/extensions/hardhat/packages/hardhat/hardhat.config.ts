@@ -11,48 +11,84 @@ import "@nomicfoundation/hardhat-verify";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import { NetworkUserConfig } from "hardhat/types";
+import { vars } from "hardhat/config";
 
-const infuraApiKey: string = `${process.env.INFURA_API_KEY}`;
+const alchemyApiKey: string = `${process.env.ALCHEMY_API_KEY}`;
 const deployerKey: string = `${process.env.DEPLOYER_PRIVATE_KEY}`;
 
-const chainIds = {
-  "arbitrum-mainnet": 42161,
-  avalanche: 43114,
-  "base-mainnet": 8453,
-  baseSepolia: 84532,
-  bsc: 56,
-  ganache: 1337,
-  hardhat: 31337,
-  mainnet: 1,
-  "optimism-mainnet": 10,
-  "polygon-mainnet": 137,
-  "polygon-amoy": 80002,
-  sepolia: 11155111,
+enum ChainAlchemyLinksEnum {
+  eth = "https://eth-mainnet.g.alchemy.com/v2/",
+  eth_testnet = "https://eth-sepolia.g.alchemy.com/v2/",
+  bsc = "https://bnb-mainnet.g.alchemy.com/v2/",
+  bsc_testnet = "https://bnb-testnet.g.alchemy.com/v2/",
+  optimism = "https://opt-mainnet.g.alchemy.com/v2/",
+  optimism_testnet = "https://opt-sepolia.g.alchemy.com/v2/",
+  arbitrum = "https://arb-mainnet.g.alchemy.com/v2/",
+  arbitrum_testnet = "https://arb-sepolia.g.alchemy.com/v2/",
+  polygon = "https://polygon-mainnet.g.alchemy.com/v2/",
+  polygon_testnet = "https://polygon-amoy.g.alchemy.com/v2/",
+  base = "https://base-mainnet.g.alchemy.com/v2/",
+  base_testnet = "https://base-sepolia.g.alchemy.com/v2/",
+}
+
+const chainConfig: Record<
+  string,
+  { chainId: number; url: string; gasPrice?: number }
+> = {
+  mainnet: { chainId: 1, url: ChainAlchemyLinksEnum.eth + alchemyApiKey },
+  sepolia: {
+    chainId: 11155111,
+    url: ChainAlchemyLinksEnum.eth_testnet + alchemyApiKey,
+  },
+  bsc: { chainId: 56, url: ChainAlchemyLinksEnum.bsc + alchemyApiKey },
+  bscTestnet: {
+    chainId: 97,
+    url: ChainAlchemyLinksEnum.bsc_testnet + alchemyApiKey,
+    gasPrice: 20000000000,
+  },
+  optimism: {
+    chainId: 10,
+    url: ChainAlchemyLinksEnum.optimism + alchemyApiKey,
+  },
+  optimismSepolia: {
+    chainId: 11155420,
+    url: ChainAlchemyLinksEnum.optimism_testnet + alchemyApiKey,
+  },
+  arbitrum: {
+    chainId: 42161,
+    url: ChainAlchemyLinksEnum.arbitrum + alchemyApiKey,
+  },
+  arbitrumSepolia: {
+    chainId: 421614,
+    url: ChainAlchemyLinksEnum.arbitrum_testnet + alchemyApiKey,
+  },
+  polygon: { chainId: 137, url: ChainAlchemyLinksEnum.polygon + alchemyApiKey },
+  polygonAmoy: {
+    chainId: 80002,
+    url: ChainAlchemyLinksEnum.polygon_testnet + alchemyApiKey,
+  },
+  base: {
+    chainId: 8453,
+    url: "https://base-rpc.publicnode.com/",
+  },
+  baseSepolia: {
+    chainId: 84532,
+    url: ChainAlchemyLinksEnum.base_testnet + alchemyApiKey,
+  },
 };
 
-function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
-  let jsonRpcUrl: string;
-  switch (chain) {
-    case "avalanche":
-      jsonRpcUrl = "https://api.avax.network/ext/bc/C/rpc";
-      break;
-    case "base-mainnet":
-      jsonRpcUrl = "https://mainnet.base.org";
-      break;
-    case "baseSepolia":
-      jsonRpcUrl = "https://sepolia.base.org";
-      break;
-    case "bsc":
-      jsonRpcUrl = "https://bsc-dataseed1.binance.org";
-      break;
-    default:
-      jsonRpcUrl = "https://" + chain + ".infura.io/v3/" + infuraApiKey;
-  }
-
+function getChainConfig(network: keyof typeof chainConfig): NetworkUserConfig {
   return {
+    url: chainConfig[network].url,
     accounts: deployerKey?.length ? [deployerKey] : [],
-    chainId: chainIds[chain],
-    url: jsonRpcUrl,
+    timeout: 10000000,
+    chainId: chainConfig[network].chainId,
+    ...(network === "base" && {
+      gasPrice: "auto",
+      gas: "auto",
+      maxFeePerGas: "auto",
+      maxPriorityFeePerGas: "auto",
+    }),
   };
 }
 
@@ -76,119 +112,112 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      chainId: chainIds.hardhat,
+      chainId: 31337,
     },
     ganache: {
-      accounts: deployerKey?.length ? [deployerKey] : [],
-      chainId: chainIds.ganache,
+      accounts: deployerKey ? [deployerKey] : [],
+      chainId: 1337,
       url: "http://127.0.0.1:8545",
     },
-    arbitrum: getChainConfig("arbitrum-mainnet"),
-    avalanche: getChainConfig("avalanche"),
-    bsc: getChainConfig("bsc"),
-    "base-mainnet": getChainConfig("base-mainnet"),
-    baseSepolia: getChainConfig("baseSepolia"),
-    mainnet: getChainConfig("mainnet"),
-    optimism: getChainConfig("optimism-mainnet"),
-    "polygon-mainnet": getChainConfig("polygon-mainnet"),
-    "polygon-amoy": getChainConfig("polygon-amoy"),
-    sepolia: getChainConfig("sepolia"),
+    ...Object.fromEntries(
+      Object.entries(chainConfig).map(([network]) => [
+        network,
+        getChainConfig(network as keyof typeof chainConfig),
+      ]),
+    ),
   },
   // configuration for harhdat-verify plugin
   etherscan: {
     apiKey: {
-      arbitrumOne: `${process.env.ARBISCAN_API_KEY}`,
-      "base-mainnet": `${process.env.BASESCAN_API_KEY}`,
-      baseSepolia: `${process.env.BASESCAN_API_KEY}`,
-      // bsc: `${process.env.BSCSCAN_API_KEY}`,
-      mainnet: `${process.env.ETHERSCAN_API_KEY}`,
-      // optimisticEthereum: `${process.env.OPTIMISM_API_KEY}`,
-      // polygon: `${process.env.POLYGONSCAN_API_KEY}`,
-      // polygonMumbai: `${process.env.POLYGONSCAN_API_KEY}`,
-      sepolia: `${process.env.ETHERSCAN_API_KEY}`,
+      mainnet: vars.get("ETHERSCAN_API_KEY", ""),
+      sepolia: vars.get("ETHERSCAN_API_KEY", ""),
+      bsc: vars.get("BSCSCAN_API_KEY", ""),
+      bscTestnet: vars.get("BSCSCAN_API_KEY", ""),
+      optimism: vars.get("OPTIMISM_API_KEY", ""),
+      optimismSepolia: vars.get("OPTIMISM_API_KEY", ""),
+      arbitrum: vars.get("ARBISCAN_API_KEY", ""),
+      arbitrumSepolia: vars.get("ARBISCAN_API_KEY", ""),
+      polygon: vars.get("POLYGONSCAN_API_KEY", ""),
+      polygonAmoy: vars.get("POLYGONSCAN_API_KEY", ""),
+      base: vars.get("BASESCAN_API_KEY", ""),
+      baseSepolia: vars.get("BASESCAN_API_KEY", ""),
     },
-    customChains: [
-      {
-        network: "arbitrum-mainnet",
-        chainId: 42161,
-        urls: {
-          apiURL: "https://api.arbiscan.io/api",
-          browserURL: "https://arbiscan.io/",
-        },
-      },
-      {
-        network: "avalanche",
-        chainId: 43114,
-        urls: {
-          apiURL: "https://api.snowtrace.io/api",
-          browserURL: "https://snowtrace.io/",
-        },
-      },
-      {
-        network: "base-mainnet",
-        chainId: 8453,
-        urls: {
-          apiURL: "https://api.basescan.org/api",
-          browserURL: "https://basescan.org/",
-        },
-      },
-      {
-        network: "baseSepolia",
-        chainId: 84532,
-        urls: {
-          apiURL: "https://api-sepolia.basescan.org/api",
-          browserURL: "https://sepolia.basescan.org/",
-        },
-      },
-      {
-        network: "bsc",
-        chainId: 56,
-        urls: {
-          apiURL: "https://api.bscscan.com/api",
-          browserURL: "https://bscscan.com/",
-        },
-      },
-      {
-        network: "optimism-mainnet",
-        chainId: 10,
-        urls: {
-          apiURL: "https://api-optimistic.etherscan.io/api",
-          browserURL: "https://optimistic.etherscan.io/",
-        },
-      },
-      {
-        network: "polygon-mainnet",
-        chainId: 137,
-        urls: {
-          apiURL: "https://api.polygonscan.com/api",
-          browserURL: "https://polygonscan.com/",
-        },
-      },
-      {
-        network: "polygon-amoy",
-        chainId: 80002,
-        urls: {
-          apiURL: "https://amoy.polygonscan.com/api",
-          browserURL: "https://amoy.polygonscan.com/",
-        },
-      },
-      {
-        network: "sepolia",
-        chainId: 11155111,
-        urls: {
-          apiURL: "https://api-sepolia.etherscan.io/api",
-          browserURL: "https://sepolia.etherscan.io/",
-        },
-      },
-      {
-        network: "optimismSepolia",
-        chainId: 11155420,
-        urls: {
-          apiURL: "https://api-sepolia-optimistic.etherscan.io/api",
-          browserURL: "https://sepolia-optimism.etherscan.io/",
-        },
-      },
-    ],
+    customChains: Object.entries(chainConfig).map(([network, { chainId }]) => {
+      let apiURL: string;
+      let browserURL: string;
+
+      const networkBase = network
+        .split(/Testnet|Sepolia|Amoy/)[0]
+        .toLowerCase();
+      const isTestnet =
+        network.includes("Testnet") ||
+        network.includes("Sepolia") ||
+        network.includes("Amoy");
+
+      switch (network) {
+        case "base":
+          apiURL = "https://api.basescan.org/api";
+          browserURL = "https://basescan.org";
+          break;
+        case "baseSepolia":
+          apiURL = "https://api-sepolia.basescan.org/api";
+          browserURL = "https://sepolia.basescan.org";
+          break;
+        case "optimism":
+          apiURL = "https://api-optimistic.etherscan.io/api";
+          browserURL = "https://optimistic.etherscan.io";
+          break;
+        case "optimismSepolia":
+          apiURL = "https://api-sepolia-optimistic.etherscan.io/api";
+          browserURL = "https://sepolia-optimistic.etherscan.io";
+          break;
+        case "arbitrum":
+          apiURL = "https://api.arbiscan.io/api";
+          browserURL = "https://arbiscan.io";
+          break;
+        case "arbitrumSepolia":
+          apiURL = "https://api-sepolia.arbiscan.io/api";
+          browserURL = "https://sepolia.arbiscan.io";
+          break;
+        case "mainnet":
+          apiURL = "https://api.etherscan.io/api";
+          browserURL = "https://etherscan.io";
+          break;
+        case "sepolia":
+          apiURL = "https://api-sepolia.etherscan.io/api";
+          browserURL = "https://sepolia.etherscan.io";
+          break;
+        case "bsc":
+          apiURL = "https://api.bscscan.com/api";
+          browserURL = "https://bscscan.com";
+          break;
+        case "bscTestnet":
+          apiURL = "https://api-testnet.bscscan.com/api";
+          browserURL = "https://testnet.bscscan.com";
+          break;
+        case "polygon":
+          apiURL = "https://api.polygonscan.com/api";
+          browserURL = "https://polygonscan.com";
+          break;
+        case "polygonAmoy":
+          apiURL = "https://api-amoy.polygonscan.com/api";
+          browserURL = "https://amoy.polygonscan.com/";
+          break;
+        default:
+          apiURL = `https://api${
+            isTestnet ? "-testnet" : ""
+          }.${networkBase}scan.com/api`;
+          browserURL = `https://${
+            isTestnet ? "testnet." : ""
+          }${networkBase}scan.com`;
+      }
+
+      return {
+        network,
+        chainId,
+        urls: { apiURL, browserURL },
+      };
+    }),
   },
   gasReporter: {
     currency: "USD",

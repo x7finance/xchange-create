@@ -38,6 +38,9 @@ export const mainnetChainIds: ChainId[] = [
   ChainId.BSC,
 ];
 
+export const UTILITY_DEPLOYER_ADDRESS =
+  "0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3";
+
 export const XChangeContractsEnum = {
   X7_LendingPool: (chainId: ChainId | string | number): `0x${string}` => {
     const numericChainId =

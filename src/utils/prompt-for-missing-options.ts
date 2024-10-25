@@ -24,7 +24,7 @@ const defaultOptions: Options = {
   extensions: [],
   contractType: "standard-token",
   quote: false,
-  deployChain: ChainId.BASE,
+  deployChain: ChainId.ETHEREUM,
   usd: false,
 }
 
@@ -67,7 +67,7 @@ export async function promptForMissingOptions(
 
     questions.push({
       type: "list", // Using list type for selection
-      name: "deploy-chain",
+      name: "deployChain",
       message: "Which chain would you like to deploy to?",
       choices: [
         { name: "Ethereum Mainnet", value: ChainId.ETHEREUM },
@@ -84,7 +84,7 @@ export async function promptForMissingOptions(
         { name: "Base Testnet (Sepolia)", value: ChainId.BASE_TESTNET },
         { name: "Hardhat Local", value: ChainId.HARDHAT },
       ],
-      default: ChainId.BASE,
+      default: ChainId.ETHEREUM,
     })
 
     const recurringAddFollowUps = (
@@ -201,7 +201,7 @@ export async function promptForMissingOptions(
     dev: options.dev ?? defaultOptions.dev,
     quote: options?.quote ?? defaultOptions.quote,
     usd: options?.usd ?? defaultOptions.usd,
-    deployChain: options?.deployChain ?? defaultOptions.deployChain,
+    deployChain: options?.deployChain ?? answers.deployChain,
     extensions: [],
   }
 

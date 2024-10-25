@@ -1,7 +1,9 @@
 import { ethers } from "ethers";
+import path from "path";
 import { parse, stringify } from "envfile";
 import * as fs from "fs";
 import chalk from "chalk";
+import { UTILITY_DEPLOYER_ADDRESS } from "../utils/constants";
 
 const envFilePath = "./.env";
 
@@ -24,6 +26,40 @@ const setNewEnvConfig = (existingEnvConfig = {}) => {
   console.log(
     chalk.gray("Generated wallet address:"),
     chalk.green(randomWallet.address),
+  );
+
+  console.log(
+    chalk.gray("Updating all the contracts with the new wallet address"),
+  );
+
+  const contractsDirectory = path.join(
+    __dirname,
+    "..",
+    "..",
+    "hardhat",
+    "contracts",
+  );
+  const contractFiles = fs.readdirSync(contractsDirectory);
+  contractFiles.forEach(file => {
+    const contractContent = fs.readFileSync(
+      path.join(contractsDirectory, file),
+      "utf8",
+    );
+    const updatedContractContent = contractContent.replace(
+      new RegExp(UTILITY_DEPLOYER_ADDRESS, "g"),
+      randomWallet.address,
+    );
+
+    fs.writeFileSync(
+      path.join(contractsDirectory, file),
+      updatedContractContent,
+    );
+  });
+
+  console.log(
+    chalk.green(
+      "Contracts have all been updated with newly generated wallet address!",
+    ),
   );
 
   console.log(

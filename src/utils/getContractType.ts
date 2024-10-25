@@ -7,6 +7,8 @@ export function getContractType(
   switch (contractType) {
     case "standard-token":
       return "StandardToken"
+    case "burn-token":
+      return "BurnToken"
     case "tax-token":
       return "TaxToken"
     case "deflationary-token":

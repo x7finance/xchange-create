@@ -873,6 +873,7 @@ contract DeflationaryToken is ERC20, Ownable {
  
     address public marketingWallet;
     address public devWallet;
+    address public lendingPoolAddress;
  
     uint256 public maxTransactionAmount;
     uint256 public swapTokensAtAmount;
@@ -951,9 +952,13 @@ contract DeflationaryToken is ERC20, Ownable {
  
     event ManualNukeLP();
  
-constructor() ERC20("DeflationaryToken", "DT") {
+constructor(
+    string memory name_,
+    string memory symbol_,
+    uint256 supply_
+) ERC20(name_, symbol_) {
  
-        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x7DE80da14460A72855d597a4bCa2C10925373000);
+        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
  
         excludeFromMaxTransaction(address(_xchangeV2Router), true);
         xchangeV2Router = _xchangeV2Router;
@@ -972,8 +977,11 @@ constructor() ERC20("DeflationaryToken", "DT") {
 
         uint256 _earlySellLiquidityFee = 0;
         uint256 _earlySellMarketingFee = 0;
+        
 
-        // ... rest of the existing code ...
+        maxTransactionAmount = supply_ * 10 / 1000; // 1% maxtxn
+        maxWallet = supply_ * 20 / 1000; // 2% maxw
+        swapTokensAtAmount = supply_ * 5 / 10000; // 0.05% swapw
 
         buyMarketingFee = _buyMarketingFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -988,9 +996,9 @@ constructor() ERC20("DeflationaryToken", "DT") {
         earlySellLiquidityFee = _earlySellLiquidityFee;
         earlySellMarketingFee = _earlySellMarketingFee;
  
-        marketingWallet = address(0x000000000000000000000000000000000000dEaD); // set as marketing wallet
-        devWallet = address(0x000000000000000000000000000000000000dEaD); // set as dev wallet
-        lendingPoolAddress = address(0x4eE199B7DFED6B96402623BdEcf2B1ae2f3750Dd); // x7 lending pool
+        marketingWallet = address(0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3);
+        devWallet = address(0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3);
+        lendingPoolAddress = address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02);
  
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
@@ -1007,7 +1015,7 @@ constructor() ERC20("DeflationaryToken", "DT") {
             _mint is an internal function in ERC20.sol that is only called here,
             and CANNOT be called ever again
         */
-        _mint(msg.sender, totalSupply);
+        _mint(msg.sender, supply_);
     }
  
     receive() external payable {

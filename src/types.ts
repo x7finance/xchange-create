@@ -27,6 +27,7 @@ export type Extension = "hardhat" | "foundry"
 
 export type ContractType =
   | "standard-token"
+  | "burn-token"
   | "tax-token"
   | "deflationary-token"
   | "test-erc20"

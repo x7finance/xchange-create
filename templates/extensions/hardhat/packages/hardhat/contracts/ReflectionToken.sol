@@ -880,17 +880,17 @@ contract ReflectionToken is Context, IERC20, Ownable {
     inSwap = false;
   }
 
-  constructor(
-    address payable _projectWalletAddress,
-    address payable _marketingWalletAddress
-  ) {
-    walletAddress = _projectWalletAddress;
-    marketingWalletAddress = _marketingWalletAddress;
+constructor(
+    string memory name_,
+    string memory symbol_,
+    uint256 supply_
+) ERC20(name_, symbol_) {
     _rOwned[_msgSender()] = _rTotal;
 
     IXchangeV2Router02 _XchangeV2Router = IXchangeV2Router02(
-      0x7DE80da14460A72855d597a4bCa2C10925373000
-    ); // XchangeV2 for Ethereum network
+      0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8
+    );
+
     // Create a Xchange pair for this new token
     XCHANGEV2PAIR = IXchangeV2Factory(_XchangeV2Router.factory()).createPair(
       address(this),
@@ -904,7 +904,14 @@ contract ReflectionToken is Context, IERC20, Ownable {
     _isExcludedFromFee[owner()] = true;
     _isExcludedFromFee[address(this)] = true;
     _isExcludedFromFee[address(0xdead)] = true;
-    _isExcludedFromFee[address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02)] = true;
+    _isExcludedFromFee[address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02)] = true; // x7 lending pool
+
+    walletAddress = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as team wallet
+    marketingWalletAddress = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as marketing wallet
+
+    // Set total supply from constructor argument instead of hardcoded value
+    _tTotal = supply_;
+    _rTotal = (MAX - (MAX % _tTotal));
 
     emit Transfer(address(0), _msgSender(), _tTotal);
   }
@@ -1053,7 +1060,7 @@ contract ReflectionToken is Context, IERC20, Ownable {
 
   function excludeAccount(address account) external onlyOwner {
     require(
-      account != 0x7DE80da14460A72855d597a4bCa2C10925373000,
+      account != 0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8,
       "We can not exclude Xchange router."
     );
     require(!_isExcluded[account], "Account is already excluded");

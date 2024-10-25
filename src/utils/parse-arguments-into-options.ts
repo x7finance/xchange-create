@@ -37,6 +37,9 @@ export function parseArgumentsIntoOptions(rawArgs: Args): RawOptions {
 
       "--usd": Boolean,
 
+      "--deploy-chain": Number,
+      "-n": "--deploy-chain",
+
       // "--network": String,
       // "-n": "--network",
     },
@@ -52,8 +55,8 @@ export function parseArgumentsIntoOptions(rawArgs: Args): RawOptions {
   const dev = args["--dev"] ?? false
   const project = args["--project"] ?? null
   const ticker = args["--ticker"] ?? null
-  // @ts-expect-error
-  const deployChain = args["--deploy-chain"] ?? ChainId.BASE
+
+  const deployChain = (args["--deploy-chain"] as ChainId) ?? null
   const supply = args["--supply"] ?? null
   const contractType = (args["--contract-type"] as ContractType) ?? null
   const extensions = (args["--extensions"] as Extension[]) ?? null

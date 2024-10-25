@@ -5,7 +5,6 @@ import {
   NativeTokenContracts,
   XChangeContractsEnum,
   getScannerUrl,
-  mainnetChainIds,
 } from "../utils/constants";
 import chalk from "chalk";
 import ora from "ora";

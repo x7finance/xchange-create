@@ -24,10 +24,15 @@ export default async function initiateLoan(
     : toHex(0);
   const liquidityReceiverAddress = process.env.DEPLOYER_ADDRESS;
 
+  const numericChainId =
+    typeof chainId === "string" ? parseInt(chainId, 10) : chainId;
+
   // loan related terms
   const loanTermContractAddress =
     process.env.LOAN_TERM_CONTRACT_ADDRESS ??
-    XChangeContractsEnum.X7InitialLiquidityLoanTerm005(chainId as ChainId);
+    XChangeContractsEnum.X7InitialLiquidityLoanTerm005(
+      numericChainId as ChainId,
+    );
   const loanAmount = process.env.LOAN_AMOUNT
     ? parseEther(process.env.LOAN_AMOUNT)
     : toHex(0);
