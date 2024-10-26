@@ -1,5 +1,6 @@
-import type { Args, ContractType, Extension, Network, RawOptions } from "../types";
-import arg from "arg";
+import type { Args, ContractType, Extension, RawOptions } from "../types"
+import arg from "arg"
+import { ChainId } from "./consts"
 
 export function parseArgumentsIntoOptions(rawArgs: Args): RawOptions {
   const args = arg(
@@ -36,30 +37,34 @@ export function parseArgumentsIntoOptions(rawArgs: Args): RawOptions {
 
       "--usd": Boolean,
 
-      "--network": String,
-      "-n": "--network",
+      "--deploy-chain": Number,
+      "-n": "--deploy-chain",
+
+      // "--network": String,
+      // "-n": "--network",
     },
     {
-      argv: rawArgs.slice(2).map((a) => a.toLowerCase()),
+      argv: rawArgs.slice(2).map(a => a.toLowerCase()),
     }
-  );
+  )
 
-  const install = args["--install"] ?? null;
-  const skipInstall = args["--skip-install"] ?? null;
-  const hasInstallRelatedFlag = install || skipInstall;
+  const install = args["--install"] ?? null
+  const skipInstall = args["--skip-install"] ?? null
+  const hasInstallRelatedFlag = install || skipInstall
 
-  const dev = args["--dev"] ?? false;
-  const project = args["--project"] ?? null;
-  const ticker = args["--ticker"] ?? null;
-  const supply = args["--supply"] ?? null;
-  const contractType = args["--contract-type"] as ContractType ?? null;
-  const extensions = args["--extensions"] as Extension[] ?? null;
-  const help = args["--help"] ?? false;
-  const usd = args["--usd"] ?? false;
+  const dev = args["--dev"] ?? false
+  const project = args["--project"] ?? null
+  const ticker = args["--ticker"] ?? null
 
+  const deployChain = (args["--deploy-chain"] as ChainId) ?? null
+  const supply = args["--supply"] ?? null
+  const contractType = (args["--contract-type"] as ContractType) ?? null
+  const extensions = (args["--extensions"] as Extension[]) ?? null
+  const help = args["--help"] ?? false
+  const usd = args["--usd"] ?? false
 
-  const quote = args["--quote"] ?? false;
-  const network = args["--network"] as Network ?? null;
+  const quote = args["--quote"] ?? false
+  // const network = (args["--network"] as Network) ?? null
 
   return {
     project,
@@ -71,7 +76,8 @@ export function parseArgumentsIntoOptions(rawArgs: Args): RawOptions {
     extensions,
     help,
     quote,
-    network,
-    usd
-  };
+    deployChain,
+    // network,
+    usd,
+  }
 }

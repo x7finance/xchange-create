@@ -873,6 +873,7 @@ contract DeflationaryToken is ERC20, Ownable {
  
     address public marketingWallet;
     address public devWallet;
+    address public lendingPoolAddress;
  
     uint256 public maxTransactionAmount;
     uint256 public swapTokensAtAmount;
@@ -951,9 +952,13 @@ contract DeflationaryToken is ERC20, Ownable {
  
     event ManualNukeLP();
  
-constructor() ERC20("DeflationaryToken", "DT") {
+constructor(
+    string memory name_,
+    string memory symbol_,
+    uint256 supply_
+) ERC20(name_, symbol_) {
  
-        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x7DE80da14460A72855d597a4bCa2C10925373000);
+        IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
  
         excludeFromMaxTransaction(address(_xchangeV2Router), true);
         xchangeV2Router = _xchangeV2Router;
@@ -962,55 +967,55 @@ constructor() ERC20("DeflationaryToken", "DT") {
         excludeFromMaxTransaction(address(ammV2Pair), true);
         _setAutomatedMarketMakerPair(address(ammV2Pair), true);
  
-        uint256 _buyMarketingFee = 25;
-        uint256 _buyLiquidityFee = 5;
+        uint256 _buyMarketingFee = 0;
+        uint256 _buyLiquidityFee = 0;
         uint256 _buyDevFee = 0;
- 
-        uint256 _sellMarketingFee = 25;
-        uint256 _sellLiquidityFee = 5;
+
+        uint256 _sellMarketingFee = 0;
+        uint256 _sellLiquidityFee = 0;
         uint256 _sellDevFee = 0;
- 
+
         uint256 _earlySellLiquidityFee = 0;
         uint256 _earlySellMarketingFee = 0;
- 
-        uint256 totalSupply = 1 * 1e9 * 1e18;
- 
-        maxTransactionAmount = totalSupply * 10 / 1000; // 1% maxtxn
-        maxWallet = totalSupply * 20 / 1000; // 2% maxw
-        swapTokensAtAmount = totalSupply * 5 / 10000; // 0.05% swapw 
- 
+        
+
+        maxTransactionAmount = supply_ * 10 / 1000; // 1% maxtxn
+        maxWallet = supply_ * 20 / 1000; // 2% maxw
+        swapTokensAtAmount = supply_ * 5 / 10000; // 0.05% swapw
+
         buyMarketingFee = _buyMarketingFee;
         buyLiquidityFee = _buyLiquidityFee;
         buyDevFee = _buyDevFee;
         buyTotalFees = buyMarketingFee + buyLiquidityFee + buyDevFee;
- 
+
         sellMarketingFee = _sellMarketingFee;
         sellLiquidityFee = _sellLiquidityFee;
         sellDevFee = _sellDevFee;
         sellTotalFees = sellMarketingFee + sellLiquidityFee + sellDevFee;
- 
+
         earlySellLiquidityFee = _earlySellLiquidityFee;
         earlySellMarketingFee = _earlySellMarketingFee;
  
-        marketingWallet = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as marketing wallet
-        devWallet = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as dev wallet
+        marketingWallet = address(0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3);
+        devWallet = address(0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3);
+        lendingPoolAddress = address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02);
  
         // exclude from paying fees or having max transaction amount
         excludeFromFees(owner(), true);
         excludeFromFees(address(this), true);
         excludeFromFees(address(0xdead), true);
-        excludeFromFees(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
+        excludeFromFees(lendingPoolAddress, true);
  
         excludeFromMaxTransaction(owner(), true);
         excludeFromMaxTransaction(address(this), true);
         excludeFromMaxTransaction(address(0xdead), true);
-        excludeFromFees(address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02), true);
- 
+        excludeFromMaxTransaction(lendingPoolAddress, true);
+
         /*
             _mint is an internal function in ERC20.sol that is only called here,
             and CANNOT be called ever again
         */
-        _mint(msg.sender, totalSupply);
+        _mint(msg.sender, supply_);
     }
  
     receive() external payable {

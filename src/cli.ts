@@ -1,32 +1,30 @@
-import { createProject } from "./main";
-import { parseArgumentsIntoOptions } from "./utils/parse-arguments-into-options";
-import { promptForMissingOptions } from "./utils/prompt-for-missing-options";
-import { renderIntroMessage } from "./utils/render-intro-message";
-import type { Args } from "./types";
-import { displayQuote } from "./utils/quote";
+import { createProject } from "./main"
+import { parseArgumentsIntoOptions } from "./utils/parse-arguments-into-options"
+import { promptForMissingOptions } from "./utils/prompt-for-missing-options"
+import { renderIntroMessage } from "./utils/render-intro-message"
+import type { Args } from "./types"
+import { displayQuote } from "./utils/quote"
 
 export async function cli(args: Args) {
-  const rawOptions = parseArgumentsIntoOptions(args);
-
+  const rawOptions = parseArgumentsIntoOptions(args)
 
   if (rawOptions.help) {
-    displayHelp();
-    return;
+    displayHelp()
+    return
   }
-
 
   if (rawOptions.quote) {
-    const options = await promptForMissingOptions(rawOptions, "quote");
+    const options = await promptForMissingOptions(rawOptions, "quote")
 
-    await displayQuote(options);
-    return;
+    await displayQuote(options)
+    return
   }
 
-  renderIntroMessage();
+  renderIntroMessage()
 
-  const options = await promptForMissingOptions(rawOptions, 'create');
+  const options = await promptForMissingOptions(rawOptions, "create")
 
-  await createProject(options);
+  await createProject(options)
 }
 
 function displayHelp() {
@@ -51,5 +49,5 @@ function displayHelp() {
     xc --project my-project --ticker MYTICKER --supply 1000000 --contract-type standard-token --extensions extension1,extension2 --install --dev
     xc -p my-project -t MYTICKER -u 1000000 -c standard-token -e extension1,extension2 -i --dev
     xc --quote --network eth --contract-type standard-token --usd
-`);
+`)
 }

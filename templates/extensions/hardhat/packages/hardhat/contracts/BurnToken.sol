@@ -3,6 +3,7 @@
     The contract is an ERC20 true burn token contract.
     Rather then burning tokens by sending to a dead address, it will reduce the total supply
     as trading happens on the contract.
+
     Website: website.com
     Twitter: x.com/slug
     Telegram: t.me/slug
@@ -122,12 +123,12 @@ contract BurnToken is IERC20 {
 
     mapping (address => bool) private presaleAddresses;
     bool private allowedPresaleExclusion = true;
-   
-    uint256 constant private startingSupply = 544_099;
-    string constant private _name = "BurnToken";
-    string constant private _symbol = "BURN";
+
+    string private _name;
+    string private _symbol;
     uint8 constant private _decimals = 18;
-    uint256 private _tTotal = startingSupply * 10**_decimals;
+    uint256 private _tTotal;
+   
 
     struct Fees {
         uint16 buyFee;
@@ -162,7 +163,7 @@ contract BurnToken is IERC20 {
     IRouter02 public dexRouter;
     address public lpPair;
     address constant public DEAD = 0x000000000000000000000000000000000000dEaD;
-    address payable public marketingWallet = payable(0x5eCCfd219482cf6dA5716443d8d4DD3cD5549652);
+    address payable public marketingWallet = payable(0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3);
     
     bool inSwap;
     bool public contractSwapEnabled = false;
@@ -188,15 +189,26 @@ contract BurnToken is IERC20 {
         inSwap = false;
     }
 
-    constructor () payable {
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint256 supply_
+    ) payable {
+        _name = name_;
+        _symbol = symbol_;
+        _tTotal = supply_;
+
         // Set the owner.
         _owner = msg.sender;
 
         _tOwned[_owner] = _tTotal;
         emit Transfer(address(0), _owner, _tTotal);
 
-        dexRouter = IRouter02(0x7DE80da14460A72855d597a4bCa2C10925373000);
+        // Set max transaction and wallet size to 2%
+        _maxTxAmount = (_tTotal * 2) / 100;
+        _maxWalletSize = (_tTotal * 2) / 100;
 
+        dexRouter = IRouter02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
 
         lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(), address(this));
         lpPairs[lpPair] = true;
@@ -207,7 +219,7 @@ contract BurnToken is IERC20 {
         _isExcludedFromFees[_owner] = true;
         _isExcludedFromFees[address(this)] = true;
         _isExcludedFromFees[DEAD] = true;
-        _isExcludedFromFees[address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02)] = true;
+        _isExcludedFromFees[address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02)] = true; // x7 lending pool
         _liquidityHolders[_owner] = true;
     }
 
@@ -253,8 +265,8 @@ contract BurnToken is IERC20 {
 
     function totalSupply() external view override returns (uint256) { return _tTotal; }
     function decimals() external pure override returns (uint8) { return _decimals; }
-    function symbol() external pure override returns (string memory) { return _symbol; }
-    function name() external pure override returns (string memory) { return _name; }
+    function symbol() external view override returns (string memory) { return _symbol; }
+    function name() external view override returns (string memory) { return _name; }
     function getOwner() external view override returns (address) { return _owner; }
     function allowance(address holder, address spender) external view override returns (uint256) { return _allowances[holder][spender]; }
     function balanceOf(address account) public view override returns (uint256) {

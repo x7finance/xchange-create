@@ -2,11 +2,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import {
   APPROVAL_AMOUNT,
-  CONTRACT_NAMES,
+  CREATED_CONTRACTS,
   ChainId,
   XChangeContractsEnum,
   getScannerUrl,
-  mainnetChainIds,
 } from "../utils/constants";
 import chalk from "chalk";
 import ora from "ora";
@@ -18,7 +17,7 @@ export default async function approveLendingPool(
   const { ethers } = hre;
   console.log(chalk.blueBright(`----------------------------------------`));
   const chainId = hre.network.config.chainId?.toString() ?? ChainId.HARDHAT;
-  const contractName = process.env.TOKEN_NAME as keyof typeof CONTRACT_NAMES;
+  const contractName = process.env.TOKEN_NAME as keyof typeof CREATED_CONTRACTS;
   const contractAddress = process.env.TOKEN_ADDRESS ?? contractA;
 
   if (!contractName || !contractAddress) {
@@ -28,7 +27,7 @@ export default async function approveLendingPool(
   }
 
   const tokenContract = await ethers.getContractAt(
-    CONTRACT_NAMES[contractName],
+    CREATED_CONTRACTS[contractName],
     contractAddress,
   );
 
@@ -49,9 +48,7 @@ Approving X7 Lending Pool for maxiumum tokens to fund liquidity`),
   ).start();
 
   const approveTx = await tokenContract.approve(
-    XChangeContractsEnum.XCHANGE_LENDING_POOL_ADDRESS(
-      chainId as (typeof mainnetChainIds)[number],
-    ),
+    XChangeContractsEnum.X7_LendingPool(chainId),
     APPROVAL_AMOUNT,
   );
 

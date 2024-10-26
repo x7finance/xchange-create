@@ -1,17 +1,17 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 import ora from "ora";
-import { CONTRACT_NAMES, ChainId, getScannerUrl } from "../utils/constants";
+import { CREATED_CONTRACTS, ChainId, getScannerUrl } from "../utils/constants";
 import chalk from "chalk";
 import { parseEther } from "viem";
 
 export default async function deployContract(
   hre: HardhatRuntimeEnvironment,
 ): Promise<`0x${string}` | undefined> {
-  const contractName = process.env.TOKEN_NAME as keyof typeof CONTRACT_NAMES;
+  const contractName = process.env.TOKEN_NAME as keyof typeof CREATED_CONTRACTS;
 
   if (!contractName) {
-    throw new Error("TOKEN_NAME environment variables are required.");
+    throw new Error("Contract has not been created or created properly.");
   }
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.

@@ -7,7 +7,7 @@
     "compile": "hardhat compile",
     "flatten": "hardhat flatten",
     "fork": "MAINNET_FORKING_ENABLED=true hardhat node --network hardhat --no-deploy",
-    "format": "prettier --write ./*.ts ./deploy/**/*.ts ./scripts/**/*.ts ./test/**/*.ts",
+    "format": "prettier --loglevel silent --write ./*.ts ./deploy/**/*.ts ./scripts/**/*.ts ./test/**/*.ts",
     "generate": "hardhat run scripts/generateAccount.ts",
     "hardhat-verify": "hardhat verify",
     "lint": "eslint --config ./.eslintrc.json --ignore-path ./.eslintignore ./*.ts ./deploy/**/*.ts ./scripts/**/*.ts ./test/**/*.ts",
@@ -23,16 +23,16 @@
     "dotenv": "~16.4.5",
     "envfile": "~6.18.0",
     "ora": "^5.4.1",
-    "qrcode": "~1.5.1",
-    "viem": "2.10.1"
+    "qrcode": "~1.5.4",
+    "viem": "2.21.33"
   },
   "devDependencies": {
     "@ethersproject/abi": "~5.7.0",
     "@ethersproject/providers": "~5.7.2",
-    "@nomicfoundation/hardhat-chai-matchers": "~2.0.7",
-    "@nomicfoundation/hardhat-ethers": "~3.0.6",
-    "@nomicfoundation/hardhat-network-helpers": "~1.0.11",
-    "@nomicfoundation/hardhat-verify": "~2.0.8",
+    "@nomicfoundation/hardhat-chai-matchers": "~2.0.8",
+    "@nomicfoundation/hardhat-ethers": "~3.0.8",
+    "@nomicfoundation/hardhat-network-helpers": "~1.0.12",
+    "@nomicfoundation/hardhat-verify": "~2.0.11",
     "@nomiclabs/hardhat-solhint": "^3.1.0",
     "@typechain/ethers-v5": "~10.1.0",
     "@typechain/hardhat": "~9.1.0",
@@ -47,14 +47,14 @@
     "eslint-config-prettier": "~8.5.0",
     "eslint-plugin-prettier": "~4.2.1",
     "ethers": "~6.13.0",
-    "hardhat": "~2.22.5",
-    "hardhat-deploy": "~0.12.4",
+    "hardhat": "~2.22.14",
+    "hardhat-deploy": "~0.14.0",
     "hardhat-deploy-ethers": "~0.4.2",
-    "hardhat-gas-reporter": "~2.2.0",
+    "hardhat-gas-reporter": "~2.2.1",
     "prettier": "~2.8.4",
-    "solidity-coverage": "~0.8.12",
+    "solidity-coverage": "~0.8.13",
     "ts-node": "~10.9.2",
     "typechain": "~8.3.2",
-    "typescript": "~5.1.6"
+    "typescript": "~5.6.3"
   }
 }

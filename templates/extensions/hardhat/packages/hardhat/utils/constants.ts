@@ -1,28 +1,35 @@
-export const CONTRACT_NAMES = {
-  StandardToken: "StandardToken",
+export const CONTRACT_TYPES = {
+  BurnToken: "BurnToken",
   DeflationaryToken: "DeflationaryToken",
-  MockERC20: "MockERC20",
+  ReflectionToken: "ReflectionToken",
+  StandardToken: "StandardToken",
+  TaxToken: "TaxToken",
 };
+
+export const CREATED_CONTRACTS: Record<string, string> = {};
 
 export const APPROVAL_AMOUNT =
   "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 export const ChainId = {
   ETHEREUM: 1,
+  ETHEREUM_TESTNET: 11155111,
   BSC: 56,
   BSC_TESTNET: 97,
   POLYGON: 137,
-  POLYGON_TESTNET: 80001,
+  POLYGON_TESTNET: 80002,
   ARBITRUM: 42161,
-  ARBITRUM_TESTNET: 79377087078960,
+  ARBITRUM_TESTNET: 421614,
   OPTIMISM: 10,
-  SEPOLIA: 11155111,
+  OPTIMISM_TESTNET: 11155420,
   BASE: 8453,
   BASE_TESTNET: 84532,
   HARDHAT: 31337,
 } as const;
 
-export const mainnetChainIds = [
+export type ChainId = (typeof ChainId)[keyof typeof ChainId];
+
+export const mainnetChainIds: ChainId[] = [
   ChainId.BASE,
   ChainId.ETHEREUM,
   ChainId.POLYGON,
@@ -31,15 +38,64 @@ export const mainnetChainIds = [
   ChainId.BSC,
 ];
 
+export const UTILITY_DEPLOYER_ADDRESS =
+  "0xf7c5c8Bdd689767e039c631Ad42482128BD54Ba3";
+
 export const XChangeContractsEnum = {
-  XCHANGE_LENDING_POOL_ADDRESS: (chainId: (typeof mainnetChainIds)[number]) =>
-    mainnetChainIds.includes(chainId)
-      ? "0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02"
-      : "0xB2996ee6b84E03D33c276cE4ca8d5e268fB29908",
-  XCHANGE_FACTORY_ADDRESS: (chainId: (typeof mainnetChainIds)[number]) =>
-    mainnetChainIds.includes(chainId)
-      ? "0x7de800467aFcE442019884f51A4A1B9143a34fAc"
-      : "0x659Bb4214AE3808870DA2fD84AC0fD5a7e1E20FC",
+  X7_LendingPool: (chainId: ChainId | string | number): `0x${string}` => {
+    const numericChainId =
+      typeof chainId === "string" ? parseInt(chainId, 10) : chainId;
+
+    switch (numericChainId) {
+      case ChainId.ETHEREUM:
+        return "0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02";
+      case ChainId.BASE:
+        return "0x4eE199B7DFED6B96402623BdEcf2B1ae2f3750Dd";
+      case ChainId.BSC:
+        return "0x6396898c25b2bbF824DcdEc99A6F4061CC12f573";
+      case ChainId.POLYGON:
+        return "0xF57C56270E9FbF18B254E05168C632c9f3D9a442";
+      case ChainId.ARBITRUM:
+        return "0x7F3F8bcF93e17734AEec765128156690e8c7e8d3";
+      case ChainId.OPTIMISM:
+        return "0x94ada63c4B836AbBA14D2a20624bDF39b9DD5Ed5";
+      case ChainId.OPTIMISM_TESTNET:
+        return "0x0E2F369Fdc070521ae23A8BcB4Bad0310044a1e8";
+      case ChainId.ETHEREUM_TESTNET:
+        return "0xcad129C25D092a48bAC897CfbA887F16762E139f";
+      case ChainId.ARBITRUM_TESTNET:
+        return "0x3503A77fde88dfce8315116D58c9fe0bC1eCb953";
+      case ChainId.BASE_TESTNET:
+        return "0x0E2F369Fdc070521ae23A8BcB4Bad0310044a1e8";
+      case ChainId.POLYGON_TESTNET:
+        return "0xD18175c2BFad3a594FeBFe3f0426d4f8F714149C";
+      case ChainId.BSC_TESTNET:
+        return "0xA377d8B82dF8b3EE1fd849BA231F036db5eE8d83";
+      default:
+        throw new Error(`Unsupported chain ID: ${chainId}`);
+    }
+  },
+  X7InitialLiquidityLoanTerm005: (chainId: ChainId): `0x${string}` => {
+    switch (chainId) {
+      case ChainId.ETHEREUM:
+      case ChainId.BASE:
+      case ChainId.BSC:
+      case ChainId.POLYGON:
+      case ChainId.ARBITRUM:
+      case ChainId.OPTIMISM:
+        return "0x90482AD3aa56675ba313dAC14C3a7717bAD5B24D";
+      case ChainId.ETHEREUM_TESTNET:
+      case ChainId.BASE_TESTNET:
+      case ChainId.POLYGON_TESTNET:
+      case ChainId.ARBITRUM_TESTNET:
+      case ChainId.OPTIMISM_TESTNET:
+      case ChainId.BSC_TESTNET:
+        return "0x97dD34dF320CC490A071b794756423e2bE7D4B3b";
+      default:
+        throw new Error(`Unsupported chainId: ${chainId}`);
+    }
+  },
+  XCHANGE_FACTORY_ADDRESS: "0x8B76C05676D205563ffC1cbd11c0A6e3d83929c5",
 };
 
 export const NativeTokenContracts: Record<string, `0x${string}`> = {
@@ -53,7 +109,7 @@ export const NativeTokenContracts: Record<string, `0x${string}`> = {
 
   // TESTNETS
   [ChainId.BASE_TESTNET]: "0x4200000000000000000000000000000000000006",
-  [ChainId.SEPOLIA]: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+  [ChainId.ETHEREUM_TESTNET]: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
 
   // LOCAL
   [ChainId.HARDHAT]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",

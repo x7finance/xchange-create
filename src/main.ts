@@ -4,30 +4,31 @@ import {
   installPackages,
   createFirstGitCommit,
   prettierFormat,
-} from "./tasks";
-import type { Options } from "./types";
-import { renderOutroMessage } from "./utils/render-outro-message";
-import chalk from "chalk";
-import Listr from "listr";
-import path from "path";
-import { getContractName } from "./utils/getContractName";
-import { fileURLToPath } from "url";
-import { parse, stringify } from "envfile";
-import * as fs from "fs";
+} from "./tasks"
+import type { Options } from "./types"
+import { renderOutroMessage } from "./utils/render-outro-message"
+import chalk from "chalk"
+import Listr from "listr"
+import path from "path"
+import { getContractType } from "./utils/getContractType"
+import { fileURLToPath } from "url"
+import { parse, stringify } from "envfile"
+import * as fs from "fs"
+import { ChainId, XChangeContractsEnum } from "./utils/consts"
 
 export async function createProject(options: Options) {
-  console.log(`\n`);
+  console.log(`\n`)
 
-  const currentFileUrl = import.meta.url;
+  const currentFileUrl = import.meta.url
 
   const templateDirectory = path.resolve(
     decodeURI(fileURLToPath(currentFileUrl)),
     "../../templates"
-  );
+  )
 
-  const targetDirectory = path.resolve(process.cwd(), options.project);
+  const targetDirectory = path.resolve(process.cwd(), options.project)
 
-  const envFilePath = path.join(targetDirectory, "packages", "hardhat", ".env");
+  const envFilePath = path.join(targetDirectory, "packages", "hardhat", ".env")
 
   const tasks = new Listr([
     {
@@ -46,7 +47,7 @@ export async function createProject(options: Options) {
       task: () => {
         const existingEnvConfig = fs.existsSync(envFilePath)
           ? parse(fs.readFileSync(envFilePath, "utf8"))
-          : {};
+          : {}
 
         const newEnvConfig = {
           ...existingEnvConfig,
@@ -54,62 +55,78 @@ export async function createProject(options: Options) {
           TOKEN_SYMBOL: options.ticker,
           TOKEN_SUPPLY: options.supply.toString(),
           TOKEN_SUPPLY_PAIRED: options.supply,
+          DEPLOY_CHAIN: options.deployChain,
           DEPLOYER_PRIVATE_KEY: "",
-          CONTRACT_NAME: getContractName(options.contractType),
-          LOAN_TERM_CONTRACT_ADDRESS: "0xd95f799276A8373F7F234A7F211DE9E3a0ae6639",
+          ALCHEMY_API_KEY: "vN7gpCr7Q-WLGvHd19As0QXHJrOGvBZd",
+          CONTRACT_TYPE: getContractType(options.contractType),
           LOAN_AMOUNT: 0.5,
-          INITIAL_PAYMENT_DUE: 0.11
-        };
+          INITIAL_PAYMENT_DUE: 0.11,
+        }
 
-        fs.writeFileSync(envFilePath, stringify(newEnvConfig));
-        
+        fs.writeFileSync(envFilePath, stringify(newEnvConfig))
+
         // Rename the contract file to the TOKEN_NAME in the new project directory
         const contractFilePath = path.join(
           targetDirectory,
           "packages",
           "hardhat",
           "contracts",
-          `${getContractName(options.contractType)}.sol`
-        );
+          `${getContractType(options.contractType)}.sol`
+        )
         const newContractFilePath = path.join(
           path.dirname(contractFilePath),
-          `${options.project}.sol`
-        );
+          `${options.ticker}.sol`
+        )
 
         // Read the contents of the contract file
-        const contractContent = fs.readFileSync(contractFilePath, "utf8");
+        const contractContent = fs.readFileSync(contractFilePath, "utf8")
 
-        // Replace the contract name in the file contents
-        const updatedContractContent = contractContent.replace(
-          new RegExp(`contract ${getContractName(options.contractType)}`, "g"),
-          `contract ${options.project}`
-        );
+        let updatedContractContent = contractContent
+          // Replace contract name
+          .replace(
+            new RegExp(
+              `contract ${getContractType(options.contractType)}`,
+              "g"
+            ),
+            `contract ${options.project}`
+          )
+          // Replace lending pool address
+          .replace(
+            new RegExp(
+              XChangeContractsEnum.X7_LendingPool(ChainId.ETHEREUM),
+              "g"
+            ),
+            XChangeContractsEnum.X7_LendingPool(options.deployChain)
+          )
+          // Replace router address
+          .replace(
+            new RegExp(
+              XChangeContractsEnum.XchangeRouter(ChainId.ETHEREUM),
+              "g"
+            ),
+            XChangeContractsEnum.XchangeRouter(options.deployChain)
+          )
 
-        // Write the updated contents to the new contract file
-        fs.writeFileSync(newContractFilePath, updatedContractContent);
+        // Write updated content and cleanup
+        fs.writeFileSync(newContractFilePath, updatedContractContent)
+        fs.unlinkSync(contractFilePath)
 
-        // Remove the original contract file
-        fs.unlinkSync(contractFilePath);
-
-        // Update the CONTRACT_NAMES export in the new project directory
+        // Update the CREATED_CONTRACTS export in the new project directory
         const constantsFilePath = path.join(
           targetDirectory,
           "packages",
           "hardhat",
           "utils",
           "constants.ts"
-        );
-        const constantsContent = fs.readFileSync(constantsFilePath, "utf8");
+        )
+        const constantsContent = fs.readFileSync(constantsFilePath, "utf8")
         const updatedConstantsContent = constantsContent.replace(
-          /export const CONTRACT_NAMES = {[^}]*}/,
-          `export const CONTRACT_NAMES = {
-            StandardToken: "StandardToken",
-            DeflationaryToken: "DeflationaryToken",
-            MockERC20: "MockERC20",
+          /export const CREATED_CONTRACTS: Record<string, string> = {[^}]*}/,
+          `export const CREATED_CONTRACTS: Record<string, string> = {
             ${options.project}: "${options.project}",
-          };`
-        );
-        fs.writeFileSync(constantsFilePath, updatedConstantsContent);
+          }`
+        )
+        fs.writeFileSync(constantsFilePath, updatedConstantsContent)
       },
     },
     {
@@ -117,7 +134,7 @@ export async function createProject(options: Options) {
       task: () => installPackages(targetDirectory),
       skip: () => {
         if (!options.install) {
-          return "Manually skipped";
+          return "Manually skipped"
         }
       },
     },
@@ -126,7 +143,7 @@ export async function createProject(options: Options) {
       task: () => prettierFormat(targetDirectory),
       skip: () => {
         if (!options.install) {
-          return "Skipping because prettier install was skipped";
+          return "Skipping because prettier install was skipped"
         }
       },
     },
@@ -136,13 +153,13 @@ export async function createProject(options: Options) {
       }`,
       task: () => createFirstGitCommit(targetDirectory, options),
     },
-  ]);
+  ])
 
   try {
-    await tasks.run();
-    renderOutroMessage(options);
+    await tasks.run()
+    renderOutroMessage(options)
   } catch (error) {
-    console.log("%s Error occurred", chalk.red.bold("ERROR"), error);
-    console.log("%s Exiting...", chalk.red.bold("Uh oh! 😕 Sorry about that!"));
+    console.log("%s Error occurred", chalk.red.bold("ERROR"), error)
+    console.log("%s Exiting...", chalk.red.bold("Uh oh! 😕 Sorry about that!"))
   }
 }
