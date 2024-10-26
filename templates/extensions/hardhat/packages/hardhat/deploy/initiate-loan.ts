@@ -45,7 +45,7 @@ export default async function initiateLoan(
   ///////////////// hours * min * sec
   const loanDuration = process.env.LOAN_DURATION
     ? parseInt(process.env.LOAN_DURATION)
-    : 24 * 60 * 60 * 3; // 3 days in seconds
+    : 24 * 60 * 60; // 24 hours in seconds
   const now = Math.floor(Date.now() / 1000);
   const deadline = now + loanDuration;
 

@@ -30,6 +30,7 @@ export type ContractType =
   | "burn-token"
   | "tax-token"
   | "deflationary-token"
+  | "reflection-token"
   | "test-erc20"
   | "my-custom-contract"
 

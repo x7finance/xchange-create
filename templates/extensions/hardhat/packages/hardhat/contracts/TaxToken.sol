@@ -951,33 +951,36 @@ contract TaxToken is ERC20, Ownable {
  
     event ManualNukeLP();
  
-constructor() ERC20("TaxToken", "TAX") {
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint256 totalSupply_
+    ) ERC20(name_, symbol_) {
  
         IAMMV2Router02 _xchangeV2Router = IAMMV2Router02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
  
         excludeFromMaxTransaction(address(_xchangeV2Router), true);
         xchangeV2Router = _xchangeV2Router;
- 
+
         ammV2Pair = IAMMV2Factory(_xchangeV2Router.factory()).createPair(address(this), _xchangeV2Router.WETH());
         excludeFromMaxTransaction(address(ammV2Pair), true);
         _setAutomatedMarketMakerPair(address(ammV2Pair), true);
- 
+
         uint256 _buyMarketingFee = 25;
         uint256 _buyLiquidityFee = 5;
         uint256 _buyDevFee = 0;
- 
+
         uint256 _sellMarketingFee = 25;
         uint256 _sellLiquidityFee = 5;
         uint256 _sellDevFee = 0;
- 
+
         uint256 _earlySellLiquidityFee = 0;
         uint256 _earlySellMarketingFee = 0;
- 
-        uint256 totalSupply = 1 * 1e9 * 1e18;
- 
-        maxTransactionAmount = totalSupply * 10 / 1000; // 1% maxtxn
-        maxWallet = totalSupply * 20 / 1000; // 2% maxw
-        swapTokensAtAmount = totalSupply * 5 / 10000; // 0.05% swapw 
+
+        // Replace hardcoded total supply with parameter
+        maxTransactionAmount = totalSupply_ * 10 / 1000; // 1% maxtxn
+        maxWallet = totalSupply_ * 20 / 1000; // 2% maxw
+        swapTokensAtAmount = totalSupply_ * 5 / 10000; // 0.05% swapw 
  
         buyMarketingFee = _buyMarketingFee;
         buyLiquidityFee = _buyLiquidityFee;
@@ -1010,7 +1013,7 @@ constructor() ERC20("TaxToken", "TAX") {
             _mint is an internal function in ERC20.sol that is only called here,
             and CANNOT be called ever again
         */
-        _mint(msg.sender, totalSupply);
+        _mint(msg.sender, totalSupply_);
     }
  
     receive() external payable {

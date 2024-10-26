@@ -14,11 +14,11 @@ const config: Config = {
       name: "contract-type",
       message: "What kind of token contract do you want to use?",
       contractTypes: [
-        "standard-token",
         "tax-token",
         "burn-token",
         "deflationary-token",
-        "test-erc20",
+        "standard-token",
+        "reflection-token",
         "my-custom-contract",
       ],
       default: "standard-token",

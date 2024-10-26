@@ -13,6 +13,8 @@ export function getContractType(
       return "TaxToken"
     case "deflationary-token":
       return "DeflationaryToken"
+    case "reflection-token":
+      return "ReflectionToken"
     case "my-custom-contract":
       return undefined // Return undefined for custom contracts
     default:

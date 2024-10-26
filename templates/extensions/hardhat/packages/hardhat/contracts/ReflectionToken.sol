@@ -840,16 +840,16 @@ contract ReflectionToken is Context, IERC20, Ownable {
   address[] private _excluded;
 
   uint256 private constant MAX = ~uint256(0);
-  uint256 private _tTotal = 4206900000000 * 10**9;
+  uint256 private _tTotal;
   uint256 private _rTotal = (MAX - (MAX % _tTotal));
   uint256 private _tFeeTotal;
 
-  string private _name = "Reflection Token";
-  string private _symbol = "RF";
-  uint8 private _decimals = 9;
+  string private _name;
+  string private _symbol;
+  uint8 private _decimals = 9;  // This can stay since it's constant
 
-  uint256 private _taxFee = 5;
-  uint256 private _teamFee = 5;
+  uint256 private _taxFee = 1;
+  uint256 private _teamFee = 1;
   uint256 private _previousTaxFee = _taxFee;
   uint256 private _previousTeamFee = _teamFee;
 
@@ -865,7 +865,7 @@ contract ReflectionToken is Context, IERC20, Ownable {
 
   uint8 public _sellTaxMultiplier = 1;
 
-  uint256 private _maxTxAmount = 300000000000000e9;
+  uint256 private _maxTxAmount;
   // We will set a minimum amount of tokens to be swaped => 5M
   uint256 private _numOfTokensToExchangeForTeam = 5 * 10**3 * 10**9;
 
@@ -880,15 +880,22 @@ contract ReflectionToken is Context, IERC20, Ownable {
     inSwap = false;
   }
 
-constructor(
+  constructor(
     string memory name_,
     string memory symbol_,
     uint256 supply_
-) ERC20(name_, symbol_) {
+  ) {
+    _name = name_;
+    _symbol = symbol_;
+    _tTotal = supply_;
+    _rTotal = (MAX - (MAX % _tTotal));
     _rOwned[_msgSender()] = _rTotal;
 
+    // Set max transaction amount to 1% of total supply
+    _maxTxAmount = supply_ * 10 / 1000; // 1% of total supply
+
     IXchangeV2Router02 _XchangeV2Router = IXchangeV2Router02(
-      0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8
+      0xde472CFDC852c45FA8AC082A07662cA4846bD9A2
     );
 
     // Create a Xchange pair for this new token
@@ -904,14 +911,10 @@ constructor(
     _isExcludedFromFee[owner()] = true;
     _isExcludedFromFee[address(this)] = true;
     _isExcludedFromFee[address(0xdead)] = true;
-    _isExcludedFromFee[address(0x74001DcFf64643B76cE4919af4DcD83da6Fe1E02)] = true; // x7 lending pool
+    _isExcludedFromFee[address(0x0E2F369Fdc070521ae23A8BcB4Bad0310044a1e8)] = true; // x7 lending pool
 
-    walletAddress = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as team wallet
-    marketingWalletAddress = address(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as marketing wallet
-
-    // Set total supply from constructor argument instead of hardcoded value
-    _tTotal = supply_;
-    _rTotal = (MAX - (MAX % _tTotal));
+    walletAddress = payable(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as team wallet
+    marketingWalletAddress = payable(0xB869ce9B5893b1727F0fD9e99E110C4917681902); // set as marketing wallet
 
     emit Transfer(address(0), _msgSender(), _tTotal);
   }
@@ -1060,7 +1063,7 @@ constructor(
 
   function excludeAccount(address account) external onlyOwner {
     require(
-      account != 0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8,
+      account != 0xde472CFDC852c45FA8AC082A07662cA4846bD9A2,
       "We can not exclude Xchange router."
     );
     require(!_isExcluded[account], "Account is already excluded");
