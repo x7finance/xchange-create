@@ -5,6 +5,8 @@ import approveLendingPool from "./approve-lending-pool";
 import takeLoan from "./initiate-loan";
 import { isAddress } from "viem";
 import { CREATED_CONTRACTS } from "../utils/constants";
+import fs from "fs";
+import path from "path";
 
 export default async function deployAll(hre: HardhatRuntimeEnvironment) {
   let contractAddress = process.env.TOKEN_ADDRESS as `0x${string}`;
@@ -30,12 +32,30 @@ export default async function deployAll(hre: HardhatRuntimeEnvironment) {
         "ReflectionToken",
       ].includes(process.env.CONTRACT_TYPE as string)
     ) {
-      await createPair(hre, contractAddress);
+      // Check if pair already exists
+      if (!process.env.PAIR_ADDRESS) {
+        const pairAddress = await createPair(hre, contractAddress);
+        if (pairAddress) {
+          // Update .env file with the pair address
+          const envPath = path.resolve(__dirname, "../.env");
+          const envContent = `${fs.readFileSync(
+            envPath,
+            "utf8",
+          )}\nPAIR_ADDRESS=${pairAddress}`;
+          fs.writeFileSync(envPath, envContent);
+          console.log(`Pair created and saved to .env: ${pairAddress}`);
+        }
+      } else {
+        console.log(`Using existing pair: ${process.env.PAIR_ADDRESS}`);
+      }
     }
     await approveLendingPool(hre, contractAddress);
     await takeLoan(hre, contractAddress);
 
-    if (process.env.CONTRACT_TYPE === "BurnToken") {
+    if (
+      process.env.CONTRACT_TYPE === "BurnToken" ||
+      process.env.CONTRACT_TYPE === "DeflationaryToken"
+    ) {
       // await burnTokens(hre, contractAddress);
       // need to call the contract to enable trading, the function accepts a boolean an is called enableTrading
       const burnToken = await hre.ethers.getContractAt(

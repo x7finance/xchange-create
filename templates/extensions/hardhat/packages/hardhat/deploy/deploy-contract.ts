@@ -4,6 +4,8 @@ import ora from "ora";
 import { CREATED_CONTRACTS, ChainId, getScannerUrl } from "../utils/constants";
 import chalk from "chalk";
 import { parseEther } from "viem";
+import fs from "fs";
+import path from "path";
 
 export default async function deployContract(
   hre: HardhatRuntimeEnvironment,
@@ -51,11 +53,19 @@ Xchange Create is deploying ${contractName} from: ${chalk.gray(
 
     const res = await deploy(contractName, {
       from: deployer,
-      // Contract constructor arguments
       args: generateContractArgs(),
       log: true,
       autoMine: true,
     });
+
+    // Add contract address to .env file
+    const envPath = path.join(__dirname, "../../../.env");
+    const envContent = fs.readFileSync(envPath, "utf8");
+    const updatedContent = envContent.includes("TOKEN_ADDRESS=")
+      ? envContent.replace(/TOKEN_ADDRESS=.*/, `TOKEN_ADDRESS=${res.address}`)
+      : `${envContent}\nTOKEN_ADDRESS=${res.address}`;
+
+    fs.writeFileSync(envPath, updatedContent);
 
     spinner.succeed(`
 ${chalk.green(`Contract successfully deployed`)}
