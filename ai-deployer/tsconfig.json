@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node16", // This is the key change
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "strict": true,
+    "target": "ES2018",
+    "outDir": "dist",
+    "skipLibCheck": true
+  }
+}
