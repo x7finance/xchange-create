@@ -53,18 +53,17 @@ export default async function deployAll(hre: HardhatRuntimeEnvironment) {
     await takeLoan(hre, contractAddress);
 
     if (
-      process.env.CONTRACT_TYPE === "BurnToken" ||
-      process.env.CONTRACT_TYPE === "DeflationaryToken"
+      ["BurnToken", "DeflationaryToken", "TaxToken"].includes(
+        process.env.CONTRACT_TYPE as string,
+      )
     ) {
-      // await burnTokens(hre, contractAddress);
-      // need to call the contract to enable trading, the function accepts a boolean an is called enableTrading
-      const burnToken = await hre.ethers.getContractAt(
+      const tokenContract = await hre.ethers.getContractAt(
         CREATED_CONTRACTS[
           process.env.TOKEN_NAME as keyof typeof CREATED_CONTRACTS
         ],
         contractAddress,
       );
-      await burnToken.enableTrading();
+      await tokenContract.enableTrading();
     }
   } else {
     console.log("Contract not deployed");

@@ -59,7 +59,7 @@ Xchange Create is deploying ${contractName} from: ${chalk.gray(
     });
 
     // Add contract address to .env file
-    const envPath = path.join(__dirname, "../../../.env");
+    const envPath = path.join(__dirname, "../.env");
     const envContent = fs.readFileSync(envPath, "utf8");
     const updatedContent = envContent.includes("TOKEN_ADDRESS=")
       ? envContent.replace(/TOKEN_ADDRESS=.*/, `TOKEN_ADDRESS=${res.address}`)
