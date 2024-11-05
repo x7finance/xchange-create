@@ -1,7 +1,7 @@
 /**
     Reflection Token Contract
     The contract is a Reflection ERC20 token contract. 
-    It includes features the ability to tax taxes on trades and distribute to holders.
+    It includes features the ability to put taxes on trades and distribute to holders.
     Website: website.com
     Twitter: x.com/slug
     Telegram: t.me/slug
