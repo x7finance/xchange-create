@@ -110,6 +110,10 @@ export const NativeTokenContracts: Record<string, `0x${string}`> = {
   // TESTNETS
   [ChainId.BASE_TESTNET]: "0x4200000000000000000000000000000000000006",
   [ChainId.ETHEREUM_TESTNET]: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+  [ChainId.POLYGON_TESTNET]: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+  [ChainId.ARBITRUM_TESTNET]: "0x980B62Da83eFf3D4576C647993b0c1D7faf17c73",
+  [ChainId.OPTIMISM_TESTNET]: "0x4200000000000000000000000000000000000006",
+  [ChainId.BSC_TESTNET]: "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
 
   // LOCAL
   [ChainId.HARDHAT]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -129,6 +133,18 @@ export function getChainScanUrl(chainId: number) {
       return "https://optimistic.etherscan.io";
     case ChainId.BASE:
       return "https://basescan.org";
+    case ChainId.BASE_TESTNET:
+      return "https://sepolia.basescan.org";
+    case ChainId.ETHEREUM_TESTNET:
+      return "https://sepolia.etherscan.io";
+    case ChainId.BSC_TESTNET:
+      return "https://testnet.bscscan.com";
+    case ChainId.POLYGON_TESTNET:
+      return "https://amoy.polygonscan.com";
+    case ChainId.ARBITRUM_TESTNET:
+      return "https://sepolia.arbiscan.io";
+    case ChainId.OPTIMISM_TESTNET:
+      return "https://sepolia-optimistic.etherscan.io";
     case ChainId.BASE_TESTNET:
       return "https://sepolia.basescan.org";
     case ChainId.HARDHAT:

