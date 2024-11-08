@@ -2,21 +2,28 @@ import React, { useState, useEffect, useMemo } from "react"
 import { Text, Box, useInput, useApp } from "ink"
 import TextInput from "ink-text-input"
 import Spinner from "ink-spinner"
-import { AIService } from "../services/ai.service"
-import { TokenService } from "../services/token.service"
+
 import {
   formatTime,
   formatTimeAgo,
-  formatTimeTill,
   getActionColor,
   getLaunchColor,
 } from "../utils"
 import { AutonomousThoughtService } from "../services/autonomousthoughts.service"
-import { AIResponse } from "../types"
+import { AIResponse, SocialAction, SocialResponse } from "../types"
 import { launchContext } from "../launch-context"
 import { commands } from "../commands"
 import { ThoughtsService } from "../services/thoughts.service"
 import dayjs from "dayjs"
+import { SocialService } from "../services/social.service"
+import utc from "dayjs/plugin/utc"
+import { TwitterService } from "../services/twitter.service"
+import dotenv from "dotenv"
+
+dotenv.config()
+
+dayjs.extend(utc)
+
 interface Launch {
   id: string
   timestamp: number
@@ -37,8 +44,18 @@ interface ModalProps {
   children: React.ReactNode
 }
 
+interface Tweet {
+  id: string
+  timestamp: number
+  content: string
+  status: "pending" | "posted" | "failed"
+  scheduledTime: string
+  isThreaded?: boolean
+  otherTweets?: SocialAction[]
+}
+
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
-  useInput((input, key) => {
+  useInput((input: string, key: { escape: any }) => {
     if (key.escape || input === "q") {
       onClose()
     }
@@ -69,7 +86,8 @@ export const HomeView = () => {
   const [nextThought, setNextThought] = useState<number>(
     AutonomousThoughtService.getInstance().getThoughtInterval()
   )
-  const [isModerating, setIsModerating] = useState(false)
+  const [isModeratingTweets, setIsModeratingTweets] = useState(false)
+  const [isModeratingLaunches, setIsModeratingLaunches] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
   const [actions, setActions] = useState<Action[]>([])
   const MAX_DISPLAY = 10 // Maximum number of actions to show
@@ -77,15 +95,85 @@ export const HomeView = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState<React.ReactNode>(null)
   const thoughtsService = useMemo(() => ThoughtsService.getInstance(), [])
-
+  const socialService = useMemo(() => SocialService.getInstance(), [])
+  const twitterService = useMemo(
+    () =>
+      TwitterService.getInstance(
+        process.env.TWITTER_CLIENT_ID!,
+        process.env.TWITTER_CLIENT_SECRET!,
+        process.env.TWITTER_ID!
+      ),
+    []
+  )
   const [upcomingThoughts, setUpcomingThoughts] = useState<
     Array<{ timestamp: number; thought: AIResponse }>
   >([])
+
+  const [nextSocial, setNextSocial] = useState<number>(
+    socialService.getSocialInterval()
+  )
+
+  const [tweets, setTweets] = useState<Tweet[]>([])
+  const [selectedTweetIndex, setSelectedTweetIndex] = useState<number>(0)
 
   useEffect(() => {
     const updateQueue = () => {
       const thoughts = thoughtsService.getUpcomingThoughts()
       setUpcomingThoughts(thoughts)
+    }
+
+    const handleSocial = async (response: SocialResponse) => {
+      setIsThinking(false)
+
+      if (response.actions.length > 0) {
+        addAction({
+          type: "completed",
+          message: `Social Thoughts completed: ${response.actions.length} tweets to schedule`,
+          timestamp: Date.now(),
+        })
+        setNextSocial(socialService.getSocialInterval())
+        await socialService.scheduleActions(response)
+      }
+    }
+
+    const handleTweetScheduled = (action: SocialAction) => {
+      const newTweet: Tweet = {
+        id: `tweet-${Date.now()}`,
+        timestamp: dayjs(action.intendedPostTime).unix(),
+        content: action.tweet,
+        status: "pending",
+        scheduledTime: action.intendedPostTime,
+        isThreaded: action.isThreaded,
+        otherTweets: action.otherTweets!,
+      }
+      setTweets(prev => [...prev, newTweet])
+      addAction({
+        type: "completed",
+        message: `Tweet scheduled: ${action.tweet}`,
+        timestamp: Date.now(),
+      })
+    }
+
+    const handleTweet = async (tweet: SocialAction) => {
+      // Do Tweet
+      const posted = await twitterService.postTweet(tweet)
+      if (posted) {
+        setTweets(prev =>
+          prev.filter(t => t.timestamp !== dayjs(tweet.intendedPostTime).unix())
+        )
+
+        addAction({
+          type: "completed",
+          message: `Tweet posted: ${tweet.tweet}`,
+          timestamp: Date.now(),
+        })
+      } else {
+        addAction({
+          type: "rejected",
+          message: `Failed to post tweet: ${tweet.tweet}`,
+          timestamp: Date.now(),
+        })
+      }
     }
 
     const handleThoughtReady = (thought: AIResponse) => {
@@ -114,7 +202,9 @@ export const HomeView = () => {
     thoughtsService.on("thoughtAdded", updateQueue)
     thoughtsService.on("thoughtProcessed", updateQueue)
     thoughtsService.on("thoughtError", updateQueue)
-
+    socialService.on("social_response", handleSocial)
+    socialService.on("tweet_scheduled", handleTweetScheduled)
+    socialService.on("tweet", handleTweet)
     thoughtsService.on("thoughtReady", handleThoughtReady)
 
     updateQueue()
@@ -123,6 +213,10 @@ export const HomeView = () => {
       thoughtsService.removeListener("thoughtAdded", updateQueue)
       thoughtsService.removeListener("thoughtProcessed", updateQueue)
       thoughtsService.removeListener("thoughtError", updateQueue)
+      socialService.removeListener("social_response", handleSocial)
+      socialService.removeListener("tweet_scheduled", handleTweetScheduled)
+      socialService.removeListener("tweet", handleTweet)
+      thoughtsService.removeListener("thoughtReady", handleThoughtReady)
     }
   }, [])
 
@@ -142,9 +236,37 @@ export const HomeView = () => {
         }
         return Math.max(0, prev - 1)
       })
+
+      setNextSocial(prev => {
+        if (prev === 0) {
+          addAction({
+            type: "thinking",
+            message: "Preparing social update...",
+            timestamp: Date.now(),
+          })
+          setIsThinking(true)
+          SocialService.getInstance().processSocialUpdate()
+          return SocialService.getInstance().getSocialInterval()
+        }
+        return Math.max(0, prev - 1)
+      })
     }, 1000)
 
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    SocialService.getInstance().on("social_response", response => {
+      setIsThinking(false)
+
+      if (response.action?.type === "tweet") {
+        addAction({
+          type: "completed",
+          message: `Tweet prepared: ${response.action.parameters?.tweet}`,
+          timestamp: Date.now(),
+        })
+      }
+    })
   }, [])
 
   const handleThought = (thought: AIResponse) => {
@@ -176,27 +298,57 @@ export const HomeView = () => {
     })
   }, [])
 
-  useInput((input, key) => {
+  useInput((input: string, key: { upArrow: any; downArrow: any }) => {
     const pendingLaunches = launches.filter(l => l.status === "pending")
+    const pendingTweets = tweets.filter(t => t.status === "pending")
 
-    if (pendingLaunches.length === 0) return
+    if (pendingLaunches.length === 0 && pendingTweets.length === 0) return
 
-    if (key.upArrow) {
-      setSelectedLaunchIndex(prev =>
-        prev > 0 ? prev - 1 : pendingLaunches.length - 1
-      )
-    }
-    if (key.downArrow) {
-      setSelectedLaunchIndex(prev =>
-        prev < pendingLaunches.length - 1 ? prev + 1 : 0
-      )
+    if (isModeratingLaunches) {
+      if (key.upArrow) {
+        setSelectedLaunchIndex(prev =>
+          prev > 0 ? prev - 1 : pendingLaunches.length - 1
+        )
+      }
+      if (key.downArrow) {
+        setSelectedLaunchIndex(prev =>
+          prev < pendingLaunches.length - 1 ? prev + 1 : 0
+        )
+      }
+
+      if (input === "y") {
+        handleLaunchAction(pendingLaunches[selectedLaunchIndex].id, "approved")
+      }
+      if (input === "n") {
+        handleLaunchAction(pendingLaunches[selectedLaunchIndex].id, "denied")
+      }
+      if (input === "q") {
+        setIsModeratingLaunches(false)
+      }
     }
 
-    if (input === "y") {
-      handleLaunchAction(pendingLaunches[selectedLaunchIndex].id, "approved")
-    }
-    if (input === "n") {
-      handleLaunchAction(pendingLaunches[selectedLaunchIndex].id, "denied")
+    if (isModeratingTweets) {
+      if (key.upArrow) {
+        setSelectedTweetIndex(prev =>
+          prev > 0 ? prev - 1 : pendingTweets.length - 1
+        )
+      }
+      if (key.downArrow) {
+        setSelectedTweetIndex(prev =>
+          prev < pendingTweets.length - 1 ? prev + 1 : 0
+        )
+      }
+
+      if (input === "p" && selectedTweetIndex >= 0) {
+        handleTweetAction(pendingTweets[selectedTweetIndex].id, "post")
+      }
+      if (input === "x" && selectedTweetIndex >= 0) {
+        handleTweetAction(pendingTweets[selectedTweetIndex].id, "cancel")
+      }
+
+      if (input === "q") {
+        setIsModeratingTweets(false)
+      }
     }
   })
 
@@ -238,14 +390,25 @@ export const HomeView = () => {
           <Text bold>Available Commands</Text>
           {Object.values(commands).map(command => (
             <Box key={command.name}>
-              <Text>{command.name}</Text>
+              <Text>{command.name} - </Text>
               <Text dimColor>{command.description}</Text>
             </Box>
           ))}
         </Box>
       )
-    } else if (input === "moderate") {
-      setIsModerating(true)
+    } else if (input.split(" ")[0] === "moderate") {
+      if (input.split(" ")[1] === "tweets") {
+        setIsModeratingTweets(true)
+      } else if (input.split(" ")[1] === "launches") {
+        setIsModeratingLaunches(true)
+      }
+    } else if (input === "yap") {
+      addAction({
+        type: "thinking",
+        message: "Starting manual social update...",
+        timestamp: Date.now(),
+      })
+      SocialService.getInstance().processSocialUpdate()
     }
 
     setCommand("")
@@ -291,6 +454,59 @@ export const HomeView = () => {
       addAction({
         type: "rejected",
         message: `Token ${launchId} was denied`,
+        timestamp: Date.now(),
+      })
+    }
+  }
+
+  const handleTweetAction = async (
+    tweetId: string,
+    action: "post" | "cancel"
+  ) => {
+    if (action === "post") {
+      try {
+        const tweet = tweets.find(t => t.id === tweetId)
+        if (tweet) {
+          // Here you would integrate with your Twitter service to actually post
+          const socialAction: SocialAction = {
+            tweet: tweet.content,
+            intendedPostTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            isThreaded: tweet.isThreaded!,
+            otherTweets: tweet.otherTweets,
+          }
+          const posted = await twitterService.postTweet(socialAction)
+          if (posted) {
+            setTweets(prev =>
+              prev.map(t => (t.id === tweetId ? { ...t, status: "posted" } : t))
+            )
+            addAction({
+              type: "completed",
+              message: `Tweet posted: ${tweet.content}`,
+              timestamp: Date.now(),
+            })
+          } else {
+            addAction({
+              type: "rejected",
+              message: `Failed to post tweet: ${tweet.content}`,
+              timestamp: Date.now(),
+            })
+          }
+        }
+      } catch (error) {
+        addAction({
+          type: "rejected",
+          message: `Failed to post tweet ${tweetId}`,
+          timestamp: Date.now(),
+        })
+      }
+    } else {
+      setTweets(prev => prev.filter(t => t.id !== tweetId))
+      if (tweets.length === 0) {
+        setIsModeratingTweets(false)
+      }
+      addAction({
+        type: "rejected",
+        message: `Tweet ${tweetId} was cancelled`,
         timestamp: Date.now(),
       })
     }
@@ -409,11 +625,48 @@ export const HomeView = () => {
           })}
       </Box>
 
+      <Box flexDirection="column" borderStyle="single" padding={1}>
+        <Text bold>
+          Pending Tweets (Use ↑↓ to navigate, P to post, X to cancel)
+        </Text>
+        {tweets
+          .filter(t => t.status === "pending")
+          .sort((a, b) =>
+            dayjs(a.scheduledTime).isBefore(dayjs(b.scheduledTime)) ? -1 : 1
+          )
+          .map((tweet, i) => (
+            <Box key={i} flexDirection="column" marginBottom={1}>
+              <Box>
+                <Text color="blue">
+                  {tweets.filter(t => t.status === "pending")[
+                    selectedTweetIndex
+                  ]?.id === tweet.id
+                    ? ">"
+                    : " "}
+                  Scheduled for:{" "}
+                  {dayjs.utc(tweet.scheduledTime).format("MM/DD/YY HH:mm:ss")}
+                </Text>
+              </Box>
+              <Box paddingLeft={2} flexDirection="column">
+                <Text wrap="wrap">{tweet.content}</Text>
+                {tweet.isThreaded &&
+                  tweet.otherTweets?.map(_tweet => (
+                    <Text dimColor>+ {_tweet.tweet}</Text>
+                  ))}
+              </Box>
+            </Box>
+          ))}
+      </Box>
+
       <Box flexDirection="row" justifyContent="space-between">
         <Box>
           <Text>Next Autonomous Thought: </Text>
           <Text inverse color="yellow">
             {formatTime(nextThought)}
+          </Text>
+          <Text> | Next Social Update: </Text>
+          <Text inverse color="blue">
+            {formatTime(nextSocial)}
           </Text>
         </Box>
         {isThinking && (
@@ -431,7 +684,11 @@ export const HomeView = () => {
         <Text>❯ </Text>
         <TextInput
           value={command}
-          onChange={setCommand}
+          onChange={(e: string) => {
+            if (!isModeratingTweets && !isModeratingLaunches) {
+              setCommand(e)
+            }
+          }}
           onSubmit={handleCommand}
           placeholder="Type a command (help for options)"
         />

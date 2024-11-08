@@ -12,9 +12,18 @@ export const commands: Record<string, Command> = {
     name: "setinterval",
     description: "Show available commands",
   },
-  launch: {
+  think: {
     name: "think",
     description: "Trigger manual thought process",
+  },
+  yap: {
+    name: "yap",
+    description: "Trigger manual social media process",
+  },
+  moderate: {
+    name: "moderate <tweets|launches>",
+    description:
+      "Moderate tweets or launches, arrow keys to select, tweets (p)ost, c(x)ncel, launches (y)es, (n)o, (q)uit",
   },
   status: {
     name: "status",

@@ -21,7 +21,7 @@ interface ThoughtResult {
 
 export class AutonomousThoughtService extends EventEmitter {
   private static instance: AutonomousThoughtService
-  public thoughtInterval: number = 300 // 5 minutes in seconds
+  public thoughtInterval: number = 300000 // 5 minutes in seconds
   public isRunning: boolean = true
   private aiService: AIService
   private twitterService: TwitterService
@@ -31,16 +31,13 @@ export class AutonomousThoughtService extends EventEmitter {
   private constructor() {
     super()
     this.tokenService = new TokenService()
-    this.aiService = new AIService(process.env.ANTHROPIC_API_KEY!)
+    this.aiService = AIService.getInstance(process.env.ANTHROPIC_API_KEY!)
     this.trendsService = new TrendsService()
-    this.twitterService = new TwitterService(
-      process.env.TWITTER_API_KEY!,
-      process.env.TWITTER_API_SECRET!,
-      process.env.TWITTER_ACCESS_TOKEN!,
-      process.env.TWITTER_ACCESS_SECRET!,
+    this.twitterService = TwitterService.getInstance(
+      process.env.TWITTER_CLIENT_ID!,
+      process.env.TWITTER_CLIENT_SECRET!,
       process.env.TWITTER_ID!
     )
-    this.aiService = new AIService(process.env.ANTHROPIC_API_KEY!)
   }
 
   public static getInstance(): AutonomousThoughtService {
@@ -55,14 +52,26 @@ export class AutonomousThoughtService extends EventEmitter {
       const mentions = await this.twitterService.getMentions()
       const trends = await this.trendsService.getTrends()
       const latestTokens = await this.tokenService.getLatestTokens()
+      console.log("formulatedThought", {
+        tokens: latestTokens || [],
+        mentions: mentions || [],
+        trends: {
+          cryptoTrends: trends?.cryptoTrends || [],
+          newsHeadlines: trends?.newsHeadlines || [],
+          hackerNewsTrends: trends?.hackerNewsTrends || [],
+        },
+        ourProjects: launchContext
+          .getAllLaunches()
+          .map(launch => launch.thought!),
+      })
       // Get market conditions and current state
       const thought = await this.aiService.think({
         tokens: latestTokens || [],
         mentions: mentions || [],
         trends: {
-          googleTrends: trends?.googleTrends || [],
           cryptoTrends: trends?.cryptoTrends || [],
           newsHeadlines: trends?.newsHeadlines || [],
+          hackerNewsTrends: trends?.hackerNewsTrends || [],
         },
         ourProjects: launchContext
           .getAllLaunches()

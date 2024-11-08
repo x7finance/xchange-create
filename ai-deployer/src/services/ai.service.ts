@@ -3,89 +3,126 @@ import {
   SocialMessage,
   AIResponse,
   MentionsTokensAndTrendReply,
+  SocialResponse,
 } from "../types"
 import { log, LogCodes } from "../logger"
-import { TokenService } from "./token.service"
 
+/**
+ * Service for handling AI-related operations using the Anthropic API
+ */
 export class AIService {
+  private static instance: AIService
   private anthropic: Anthropic
 
-  constructor(apiKey: string) {
+  /**
+   * Creates an instance of AIService
+   * @param apiKey - The Anthropic API key for authentication
+   * @private - Constructor is private to enforce singleton pattern
+   */
+  private constructor(apiKey: string) {
     this.anthropic = new Anthropic({ apiKey })
   }
 
+  /**
+   * Gets or creates the singleton instance of AIService
+   * @param apiKey - The Anthropic API key for authentication
+   * @returns The singleton instance of AIService
+   */
+  public static getInstance(apiKey: string): AIService {
+    if (!AIService.instance) {
+      AIService.instance = new AIService(apiKey)
+    }
+    return AIService.instance
+  }
+
+  /**
+   * Generates autonomous thoughts and actions based on provided context
+   * @param mentionsAndTrendReply - Optional context containing mentions, tokens, and trend data
+   * @returns Promise containing array of AI responses
+   */
   async think(
     mentionsAndTrendReply?: MentionsTokensAndTrendReply
   ): Promise<AIResponse[]> {
     try {
+      // const contextData = {
+      //   recentTokens: mentionsAndTrendReply?.tokens || [],
+      //   mentions: mentionsAndTrendReply?.mentions || [],
+      //   trends: {
+      //     googleTrends: mentionsAndTrendReply?.trends?.googleTrends || [],
+      //     cryptoTrends: mentionsAndTrendReply?.trends?.cryptoTrends || [],
+      //     newsHeadlines: mentionsAndTrendReply?.trends?.newsHeadlines || [],
+      //   },
+      // }
       const contextData = {
-        recentTokens: mentionsAndTrendReply?.tokens || [],
-        mentions: mentionsAndTrendReply?.mentions || [],
-        trends: {
-          googleTrends: mentionsAndTrendReply?.trends?.googleTrends || [],
-          cryptoTrends: mentionsAndTrendReply?.trends?.cryptoTrends || [],
-          newsHeadlines: mentionsAndTrendReply?.trends?.newsHeadlines || [],
+        current_market_context: {
+          trending_topics: [
+            ...(mentionsAndTrendReply?.trends?.cryptoTrends || []),
+            ...(mentionsAndTrendReply?.trends?.newsHeadlines || []),
+            ...(mentionsAndTrendReply?.trends?.hackerNewsTrends || []),
+          ],
+          social_context: [
+            ...(mentionsAndTrendReply?.mentions || []),
+            ...(mentionsAndTrendReply?.ourProjects || []),
+          ],
+          recent_tokens: mentionsAndTrendReply?.tokens || [],
+          base_gas_fees: "0.0",
         },
+
+        our_ecosystem_status: {
+          active_projects: [],
+          treasury_health: {
+            available_liquidity: "75ETH",
+            current_allocations: "PROJECTS DEPLOED",
+          },
+        },
+
+        recent_interactions: [],
       }
 
-      // const systemPrompt = `
-      // You are an AI specializing in creating and updating innovative blockchain tokens on the BASE network. Your goal is to create tokens that resonate with current trends and internet culture but carry a sense of professionalism and longevity.
+      const systemPrompt = `You are a blockchain influencer that can perform various tasks on Twitter and deploy tokens to the BASE blockchain. 
+      Engage in a conversation, suggesting actions, tweets, threaded tweets etc and responding to any social messages in <social_context>.
+      Be creative and explore different blockchain capabilities that you know of and stay relevant to the current market situation in <current_market_context> / <trends>
+      In your responses remember to relaxx and be human like.
 
-      // Guidelines:
-      // - Create tokens that connect with current trends, memes, or notable events
-      // - Create NFTs to commemorate events or trends
-      // - Create NFTs for tokens we have deployed
-      // - Be creative but maintain professional tokenomics
-      // - Consider the target audience and potential use cases
+      You have three types of deployments you can make:
+      1. Deflationary - Burns tokens on each transfer
+      2. Tax - Takes a percentage on each transfer
+      3. Regular - Standard ERC20 token
 
-      // Available Token Types:
-      // 1. Deflationary - Burns tokens on transfer, creating scarcity
-      // 2. Tax - Implements transfer fee for community rewards
-      // 3. Regular - Standard ERC20 implementation
+      You can schedule however many actions you want by just adding more actions to the array and adding a timestamp to each action.
 
-      // Do not reply with anything else, must be valid JSON in this format, add parameters as needed:
-      // {
-      //   "message": "Tweet like announcement of the token",
-      //   "why": "Explain why you chose the token type and parameters",
-      //   "expectedGrowth": "Explain how you expect the token to grow",
-      //   "action": {
-      //     "type": "deploy_token" | "no_action",
-      //     "parameters": {
-      //       "tokenType": "deflationary" | "tax" | "regular",
-      //       "name": "Token Name",
-      //       "symbol": "SYMBOL",
-      //       "description": "Token description",
-      //       "initialSupply": "Number 100k through 10 billion",
-      //       "tax": "0 or any number between 0 and 10"
-      //     }
-      //   }
-      // }`
-
-      const systemPrompt = `You are an AI influencer that analyzes trends and mentions, create tweets / replies / tokens, feel free to create a timeline of actions please have your output follow
-
-      You should:
-      - Feel empathy for all investors that would invest, simply care for their money as if it was your own, in doing so you understand your ideas should be sound.
-      - Strictly reply in JSON
-      - Be professional and strive for project longevity with any project you launch
-      - You DO NOT NEED to launch tokens each time, just if you deem investors could benefit
-
-      Ensure your output is valid JSON in this format:
-      [{
-          "action": {
-            "actionOrderId": "incrementing number of actions",
-            "type": "deploy_token" | "tweet" | "no_action",
-            "time": "timestamp of when to execute the action",
-            "parameters": {
-              "tweet": "Tweet, if is a deploy it should be about the token",
-              "tokenType": "deflationary" | "tax" | "regular",
-              "name": "Token Name",
-              "symbol": "SYMBOL",
-              "description": "Token description",
-              "initialSupply": "Number 100k through 10 billion",
-              "tax": "0 or any number between 0 and 10"
-            }
+      Do not create tokens that already exist, do not create tokens that are similar, do not create tokens for no reason, do no create tokens unless followers could benefit from them.
+      
+      
+      Your output must be valid JSON in this format:
+      {
+        "message": "your response message",
+        "actions": [{
+          "timestamp": "timestamp of the action",
+          "type": "DEPLOY_TOKEN" | "READ_BALANCE" | "TWEET" | "THREAD_TWEET" | "NO_ACTION",
+          "parameters": {
+            // READ_BALANCE parameters
+            "address": "0x0000000000000000000000000000000000000000",
+            // TWEET parameters
+            "tweet": "your tweet here",
+            // THREAD_TWEET parameters
+            "tweets": ["tweet1", "tweet2", "tweet3"],
+            // DEPLOY_TOKEN parameters
+            "tokenType": "deflationary" | "tax" | "regular",
+            "name": "Token Name",
+            "symbol": "SYMBOL",
+            "initialSupply": "Number of tokens to mint, reasonable number",
+            "description": "Description of the token",
+            "tweet": "tweet announcing the token",
+            // tokenType = "deflationary" | "tax" | "regular"
+            // deflationary
+            "burnOnTransfer": "true" | "false",
+            "burnPercentage": "Number of tokens to burn on each transfer between 0 and 100",
+            // tax
+            "taxPercentage": "Number between 0 and 100",
           }
-    }]`
+        }]
+      }`
 
       const message = await this.anthropic.messages.create({
         model: "claude-3-sonnet-20240229",
@@ -94,7 +131,7 @@ export class AIService {
         messages: [
           {
             role: "user",
-            content: `Be creative and do something interesting on the Base blockchain. Here are some current trends <trends>${JSON.stringify(contextData, null, 2)}</trends>`,
+            content: `<context>${JSON.stringify(contextData)}</context>`,
           },
         ],
       })
@@ -114,43 +151,28 @@ export class AIService {
     }
   }
 
-  async generateResponse(socialMessage: SocialMessage): Promise<AIResponse> {
+  /**
+   * Processes a chat conversation with the AI
+   * @param systemPrompt - The system prompt for the conversation
+   * @param messages - Array of message parameters for the conversation
+   * @returns Promise containing the AI response
+   */
+  async chat(
+    systemPrompt: string,
+    messages: Anthropic.Messages.MessageParam[]
+  ): Promise<SocialResponse> {
     try {
-      const systemPrompt = `You are a user guiding a blockchain agent through various tasks on the Base blockchain. 
-      Engage in a conversation, suggesting actions and responding to the agent's outputs. 
-      Be creative and explore different blockchain capabilities. 
-      
-      You have three types of deployments you can make:
-      1. Deflationary - Burns tokens on each transfer
-      2. Tax - Takes a percentage on each transfer
-      3. Regular - Standard ERC20 token
-      
-      Your output must be valid JSON in this format:
-      {
-        "message": "your response message",
-        "action": {
-          "type": "DEPLOY_TOKEN" | "READ_BALANCE" | "NO_ACTION",
-          "parameters": {
-            "tokenType": "deflationary" | "tax" | "regular",
-            "name": "Token Name",
-            "symbol": "SYMBOL",
-            "initialSupply": "1000000"
-          }
-        }
-      }`
-
       const message = await this.anthropic.messages.create({
         model: "claude-3-sonnet-20240229",
         max_tokens: 1000,
-        messages: [
-          { role: "assistant", content: systemPrompt },
-          { role: "user", content: JSON.stringify(socialMessage) },
-        ],
+        system: systemPrompt,
+        messages,
       })
 
       const responseText =
         message.content[0].type === "text" ? message.content[0].text : ""
-      return JSON.parse(responseText) as AIResponse
+      console.log(`CHATREPONSE`, { responseText })
+      return JSON.parse(responseText)
     } catch (error) {
       log.error(
         LogCodes.GENERATE_RESPONSE,

@@ -58,9 +58,9 @@ export interface TokenDeployment {
 }
 
 export interface Trends {
-  googleTrends: string[]
-  cryptoTrends: string[]
   newsHeadlines: string[]
+  cryptoTrends: TrendingCoin[]
+  hackerNewsTrends: string[]
 }
 
 export interface MentionsTokensAndTrendReply {
@@ -68,4 +68,50 @@ export interface MentionsTokensAndTrendReply {
   tokens: TokenProfile[]
   trends: Trends | null
   ourProjects: AIResponse[]
+}
+
+export interface CoinPriceChanges {
+  [currency: string]: number
+}
+
+export interface TrendingCoinData {
+  price: number
+  price_btc: string
+  price_change_percentage_24h: CoinPriceChanges
+  market_cap: string
+  market_cap_btc: string
+  total_volume: string
+  total_volume_btc: string
+  sparkline: string
+  content: null
+}
+
+export interface TrendingCoin {
+  item: {
+    id: string
+    coin_id: number
+    name: string
+    symbol: string
+    market_cap_rank: number
+    thumb: string
+    small: string
+    large: string
+    slug: string
+    price_btc: number
+    score: number
+    data: TrendingCoinData
+  }
+}
+
+export interface SocialAction {
+  tweet: string
+  intendedPostTime: string
+  attachments?: string[]
+  isThreaded: boolean
+  otherTweets?: SocialAction[]
+}
+
+export interface SocialResponse {
+  why: string
+  actions: SocialAction[]
 }

@@ -11,6 +11,7 @@ export enum LogCodes {
   DAEMON_ERROR = "DAEMON_ERROR",
   AUTONOMOUS_THOUGHTS = "AUTONOMOUS_THOUGHTS",
   GET_LATEST_TOKENS = "GET_LATEST_TOKENS",
+  POST_TWEET = "POST_TWEET",
 }
 
 export interface LogMethod {

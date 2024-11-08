@@ -19,6 +19,7 @@
     "ink": "3.2.0",
     "ink-spinner": "4.0.3",
     "ink-text-input": "4.0.3",
+    "open": "8.4.2",
     "pino": "^9.5.0",
     "react": "^18.3.1",
     "ts-node-dev": "^2.0.0"
