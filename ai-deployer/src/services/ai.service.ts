@@ -181,7 +181,10 @@ export class AIService {
         "Error generating AI response:",
         error
       )
-      throw error
+      return {
+        summary: "Error generating AI response",
+        actions: [],
+      }
     }
   }
 }

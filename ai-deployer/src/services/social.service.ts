@@ -18,7 +18,7 @@ dotenv.config()
 
 export class SocialService extends EventEmitter {
   private static instance: SocialService
-  private socialInterval: number = 300 // 5 minutes in seconds
+  private socialInterval: number = 3600 // 60 minutes in seconds
   private aiService: AIService
   private trendsService: TrendsService
   private twitterService: TwitterService
@@ -73,7 +73,7 @@ export class SocialService extends EventEmitter {
           console.log(`Tweet scheduled in ${formatTime(delayMs / 1000)}}`)
           if (delayMs <= 0) {
             // Execute immediately if timestamp is in the past
-            //await this.executeAction(action)
+            await this.executeAction(action)
             appendFileSync(
               path.join(process.cwd(), ".tweets.log"),
               `${JSON.stringify(action)}\n`
@@ -86,7 +86,7 @@ export class SocialService extends EventEmitter {
               `${JSON.stringify(action)}\n`
             )
             setTimeout(async () => {
-              //await this.executeAction(action)
+              await this.executeAction(action)
               appendFileSync(
                 path.join(process.cwd(), ".tweets.log"),
                 `${JSON.stringify(action)}\n`
@@ -94,28 +94,28 @@ export class SocialService extends EventEmitter {
             }, delayMs)
           }
         } else if (action.type === "retweet") {
-          //await this.twitterService.retweet(action.tweetId!)
+          await this.twitterService.retweet(action.tweetId!)
           appendFileSync(
             path.join(process.cwd(), ".retweets.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "like") {
-          //await this.twitterService.likeTweet(action.tweetId!)
+          await this.twitterService.likeTweet(action.tweetId!)
           appendFileSync(
             path.join(process.cwd(), ".likes.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "follow") {
-          //await this.twitterService.followUser(action.userId!)
+          await this.twitterService.followUser(action.userId!)
           appendFileSync(
             path.join(process.cwd(), ".follows.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "reply") {
-          //await this.twitterService.replyToTweet(action.tweetId!, action.tweet!)
+          await this.twitterService.postReply(action)
           appendFileSync(
             path.join(process.cwd(), ".replies.log"),
             `${JSON.stringify(action)}\n`
@@ -178,10 +178,11 @@ export class SocialService extends EventEmitter {
         `You are XTraderAI, a witty AI that sparks natural crypto conversations.
 
         Tweet styles that drive engagement:
-        - Spicy (but smart) takes on market trends
-        - "Change my mind" style statements about trading psychology
+        - Spicy (but intelligent) takes on market trends
         - Relatable trading moments everyone experiences
         - Clever observations about market patterns
+        - Asking what traders are buying and selling atm
+        - Asking for their thoughts on the market
         
         Personality:
         - Sharp, witty, slightly provocative (but never reckless)
@@ -261,6 +262,8 @@ export class SocialService extends EventEmitter {
         }
 
         DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
+
+        Try not to make the same tweet twice, but if you do, make sure to add something new to it
         `,
         [
           {
