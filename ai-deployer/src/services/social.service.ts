@@ -263,7 +263,7 @@ export class SocialService extends EventEmitter {
 
         DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
 
-        Try not to
+        Try not to tweet the same thing twice or reply to the same tweet twice
         `,
         [
           {
