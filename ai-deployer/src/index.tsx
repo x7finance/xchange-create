@@ -107,4 +107,11 @@ for (const envVar of requiredEnvVars) {
 // process.on("SIGTERM", () => daemon.stop())
 // process.on("SIGINT", () => daemon.stop())
 
+const enterAltScreenCommand = "\x1b[?1049h"
+const leaveAltScreenCommand = "\x1b[?1049l"
+process.stdout.write(enterAltScreenCommand)
+process.on("exit", () => {
+  process.stdout.write(leaveAltScreenCommand)
+})
+
 render(<HomeView />)

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node16", // This is the key change
-    "module": "CommonJS",
+    "module": "Node16",
     "esModuleInterop": true,
     "jsx": "react",
     "strict": true,
