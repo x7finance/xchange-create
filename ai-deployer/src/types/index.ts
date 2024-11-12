@@ -61,6 +61,7 @@ export interface Trends {
   newsHeadlines: string[]
   cryptoTrends: TrendingCoin[]
   hackerNewsTrends: string[]
+  worldNews: NewsArticle[]
 }
 
 export interface MentionsTokensAndTrendReply {
@@ -104,14 +105,41 @@ export interface TrendingCoin {
 }
 
 export interface SocialAction {
-  tweet: string
-  intendedPostTime: string
+  type?: string
+  tweet?: string
+  intendedPostTime?: string
   attachments?: string[]
-  isThreaded: boolean
+  isThreaded?: boolean
   otherTweets?: SocialAction[]
+  tweetId?: string
+  comment?: string
+  username?: string
+  userId?: string
+  query?: string
 }
 
 export interface SocialResponse {
-  why: string
-  actions: SocialAction[]
+  summary: string
+  actions?: SocialAction[]
+}
+
+export interface NewsArticle {
+  title: string
+  text?: string
+  description: string
+  source: string
+  url: string
+}
+
+export interface HNStory {
+  title: string
+  id: number
+}
+
+export interface NewsSource {
+  title: string
+  description: string
+  url: string
+  source: string
+  publishedAt: Date
 }

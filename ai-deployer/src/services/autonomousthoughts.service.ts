@@ -72,6 +72,7 @@ export class AutonomousThoughtService extends EventEmitter {
           cryptoTrends: trends?.cryptoTrends || [],
           newsHeadlines: trends?.newsHeadlines || [],
           hackerNewsTrends: trends?.hackerNewsTrends || [],
+          worldNews: trends?.worldNews || [],
         },
         ourProjects: launchContext
           .getAllLaunches()

@@ -20,7 +20,7 @@ export class AIService {
    * @private - Constructor is private to enforce singleton pattern
    */
   private constructor(apiKey: string) {
-    this.anthropic = new Anthropic({ apiKey })
+    this.anthropic = new Anthropic({ apiKey, baseURL: "https://api.x.ai/" })
   }
 
   /**
@@ -125,7 +125,7 @@ export class AIService {
       }`
 
       const message = await this.anthropic.messages.create({
-        model: "claude-3-sonnet-20240229",
+        model: "grok-beta",
         max_tokens: 700,
         system: systemPrompt,
         messages: [
@@ -163,14 +163,16 @@ export class AIService {
   ): Promise<SocialResponse> {
     try {
       const message = await this.anthropic.messages.create({
-        model: "claude-3-sonnet-20240229",
+        model: "grok-beta",
         max_tokens: 1000,
         system: systemPrompt,
         messages,
       })
 
       const responseText =
-        message.content[0].type === "text" ? message.content[0].text : ""
+        message.content[0].type === "text"
+          ? message.content[0].text.replace("```json", "").replace("```", "")
+          : ""
       console.log(`CHATREPONSE`, { responseText })
       return JSON.parse(responseText)
     } catch (error) {

@@ -1,4 +1,4 @@
-import { TwitterApi } from "twitter-api-v2"
+import { TwitterApi, UserV2 } from "twitter-api-v2"
 import { SocialAction, SocialMessage } from "../types"
 import { log, LogCodes } from "../logger"
 import http from "http"
@@ -6,6 +6,7 @@ import http from "http"
 import { writeFileSync, readFileSync, existsSync } from "fs"
 import path from "path"
 import * as open from "open"
+import dayjs from "dayjs"
 
 export class TwitterService {
   private static instance: TwitterService | null = null
@@ -157,7 +158,14 @@ export class TwitterService {
       const { url, codeVerifier, state } = this.client.generateOAuth2AuthLink(
         callbackUrl,
         {
-          scope: ["tweet.read", "tweet.write", "users.read", "offline.access"],
+          scope: [
+            "tweet.read",
+            "tweet.write",
+            "users.read",
+            "follows.read",
+            "follows.write",
+            "offline.access",
+          ],
         }
       )
 
@@ -178,15 +186,21 @@ export class TwitterService {
       await this.refreshTokenIfNeeded()
 
       const mentions = await this.client.v2.userMentionTimeline(
-        userId || this.userId!
+        userId || this.userId!,
+        this.lastCheckedId
+          ? {
+              since_id: this.lastCheckedId!,
+            }
+          : {}
       )
 
-      console.log(mentions)
-      if (mentions.data && mentions.data.data.length > 0) {
+      if (mentions.data && mentions.data?.data?.length > 0) {
         this.lastCheckedId = mentions.data.data[0].id
       }
 
-      return mentions.data.data.map(tweet => ({
+      console.log(JSON.stringify(mentions))
+
+      return (mentions?.data?.data ?? []).map(tweet => ({
         platform: "twitter",
         messageType: "mention",
         content: tweet.text,
@@ -208,20 +222,133 @@ export class TwitterService {
         let lastTweetId: string | undefined
 
         for (const tweet of [content, ...content.otherTweets!]) {
-          const response = await this.client.v2.tweet(tweet.tweet, {
-            reply: lastTweetId
-              ? { in_reply_to_tweet_id: lastTweetId }
-              : undefined,
-          })
+          const response = await this.client.v2.tweet(
+            tweet.tweet || "I failed",
+            {
+              reply: lastTweetId
+                ? { in_reply_to_tweet_id: lastTweetId }
+                : undefined,
+            }
+          )
           lastTweetId = response.data.id
         }
       } else {
-        await this.client.v2.tweet(content.tweet)
+        await this.client.v2.tweet(content.tweet || "I failed")
       }
       return true
     } catch (error) {
       console.error(error)
       log.error(LogCodes.POST_TWEET, "Error posting tweet:", error)
+      return false
+    }
+  }
+
+  async getUsersTweets(userId: string): Promise<SocialMessage[]> {
+    await this.refreshTokenIfNeeded()
+
+    const tweets = await this.client.v2.userTimeline(userId)
+
+    return (tweets?.data?.data ?? []).map(tweet => ({
+      platform: "twitter",
+      messageType: "tweet",
+      content: tweet.text,
+      userId: tweet.author_id!,
+      tweetId: tweet.id,
+      timestamp: dayjs(tweet.created_at).toISOString(),
+    }))
+  }
+
+  async getUserFollowing(userId: string): Promise<Partial<UserV2>[]> {
+    await this.refreshTokenIfNeeded()
+
+    const following = await this.client.v2.following(userId)
+
+    return (following?.data ?? []).map((user: UserV2) => ({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      created_at: user.created_at,
+      protected: user.protected,
+      description: user.description,
+    }))
+  }
+
+  async getHomeTimeline(): Promise<SocialMessage[]> {
+    await this.refreshTokenIfNeeded()
+
+    const timeline = await this.client.v2.homeTimeline()
+
+    return (timeline?.data?.data ?? []).map(tweet => ({
+      platform: "twitter",
+      messageType: "tweet",
+      content: tweet.text,
+      userId: tweet.author_id!,
+      tweetId: tweet.id,
+      timestamp: dayjs(tweet.created_at).toISOString(),
+    }))
+  }
+
+  async likeTweet(tweetId: string): Promise<boolean> {
+    await this.refreshTokenIfNeeded()
+
+    try {
+      const result = await this.client.v2.like(this.userId!, tweetId)
+      return result.data.liked
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.LIKE_TWEET_FAILED, "Error liking tweet:", error)
+      return false
+    }
+  }
+
+  async unLikeTweet(tweetId: string): Promise<boolean> {
+    await this.refreshTokenIfNeeded()
+
+    try {
+      const result = await this.client.v2.unlike(this.userId!, tweetId)
+      return !result.data.liked
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.UNLIKE_TWEET_FAILED, "Error unliking tweet:", error)
+      return false
+    }
+  }
+
+  async followUser(userId: string): Promise<boolean> {
+    await this.refreshTokenIfNeeded()
+
+    try {
+      const result = await this.client.v2.follow(this.userId!, userId)
+      return result.data.following
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.FOLLOW_USER_FAILED, "Error following user:", error)
+      return false
+    }
+  }
+
+  async unFollowUser(userId: string): Promise<boolean> {
+    await this.refreshTokenIfNeeded()
+
+    try {
+      const result = await this.client.v2.unfollow(this.userId!, userId)
+      return !result.data.following
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.UNFOLLOW_USER_FAILED, "Error unfollowing user:", error)
+      return false
+    }
+  }
+
+  async retweet(tweetId: string): Promise<boolean> {
+    await this.refreshTokenIfNeeded()
+
+    try {
+      const result = await this.client.v2.retweet(this.userId!, tweetId)
+      return result.data.retweeted
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.RETWEET_FAILED, "Error retweeting:", error)
       return false
     }
   }

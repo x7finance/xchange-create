@@ -11,3 +11,4 @@ node_modules/
 
 .env
 .twitter-token.json
+.extra-actions.json

@@ -2,19 +2,7 @@
 import googleTrends from "google-trends-api"
 import axios from "axios"
 import { log, LogCodes } from "../logger"
-import { TrendingCoin, Trends } from "../types"
-
-interface NewsArticle {
-  title: string
-  description: string
-  source: string
-  url: string
-}
-
-interface HNStory {
-  title: string
-  id: number
-}
+import { HNStory, NewsArticle, TrendingCoin, Trends } from "../types"
 
 export class TrendsService {
   private trendCache: Trends | null = null
@@ -23,6 +11,7 @@ export class TrendsService {
   private readonly NEWS_API_KEY = process.env.NEWS_API_KEY
   private readonly REDDIT_CLIENT_ID = process.env.REDDIT_CLIENT_ID
   private readonly REDDIT_CLIENT_SECRET = process.env.REDDIT_CLIENT_SECRET
+  private readonly WORLD_NEWS_API_KEY = process.env.WORLD_NEWS_API_KEY
 
   /**
    * Combines trends from multiple sources
@@ -36,18 +25,19 @@ export class TrendsService {
     }
 
     try {
-      const [newsHeadlines, cryptoTrends, hackerNewsTrends] = await Promise.all(
-        [
+      const [newsHeadlines, cryptoTrends, hackerNewsTrends, worldNews] =
+        await Promise.all([
           this.getNewsApiTrends(),
           this.getCryptoTrends(),
           this.getHackerNewsTrends(),
-        ]
-      )
+          this.getWorldNews(),
+        ])
 
       this.trendCache = {
         cryptoTrends,
         newsHeadlines,
         hackerNewsTrends,
+        worldNews,
       }
       this.lastTrendUpdate = Date.now()
       return this.trendCache
@@ -90,7 +80,7 @@ export class TrendsService {
       const response = await axios.get(
         "https://hacker-news.firebaseio.com/v0/topstories.json"
       )
-      const topStoryIds = response.data.slice(0, 10) // Get top 10 stories
+      const topStoryIds = response.data // Get top 10 stories
 
       // Fetch details for each story
       const storyPromises = topStoryIds.map(async (id: number) => {
@@ -110,5 +100,19 @@ export class TrendsService {
       )
       return []
     }
+  }
+
+  private async getWorldNews(): Promise<NewsArticle[]> {
+    const response = await axios.get(
+      `https://api.worldnewsapi.com/search-news?text=cryptocurrency&language=en&api-key=${this.WORLD_NEWS_API_KEY}`
+    )
+    console.log(`RESPONSE`, JSON.stringify(response.data))
+    return response.data.news.map((article: any) => ({
+      title: article.title,
+      text: article.text,
+      description: article.summary,
+      source: article.author,
+      url: article.url,
+    }))
   }
 }

@@ -125,10 +125,10 @@ export const HomeView = () => {
     const handleSocial = async (response: SocialResponse) => {
       setIsThinking(false)
 
-      if (response.actions.length > 0) {
+      if (response.actions && response.actions.length > 0) {
         addAction({
           type: "completed",
-          message: `Social Thoughts completed: ${response.actions.length} tweets to schedule`,
+          message: `Social Thoughts completed: ${response?.actions?.length} actions to schedule`,
           timestamp: Date.now(),
         })
         setNextSocial(socialService.getSocialInterval())
@@ -140,9 +140,9 @@ export const HomeView = () => {
       const newTweet: Tweet = {
         id: `tweet-${Date.now()}`,
         timestamp: dayjs(action.intendedPostTime).unix(),
-        content: action.tweet,
+        content: action.tweet || "",
         status: "pending",
-        scheduledTime: action.intendedPostTime,
+        scheduledTime: action.intendedPostTime || "",
         isThreaded: action.isThreaded,
         otherTweets: action.otherTweets!,
       }
@@ -199,12 +199,21 @@ export const HomeView = () => {
       }
     }
 
+    const handleOtherAction = (action: SocialAction) => {
+      addAction({
+        type: "completed",
+        message: `Other action: ${action.type} on ${action.tweetId ?? action.userId ?? action.username}`,
+        timestamp: Date.now(),
+      })
+    }
+
     thoughtsService.on("thoughtAdded", updateQueue)
     thoughtsService.on("thoughtProcessed", updateQueue)
     thoughtsService.on("thoughtError", updateQueue)
     socialService.on("social_response", handleSocial)
     socialService.on("tweet_scheduled", handleTweetScheduled)
     socialService.on("tweet", handleTweet)
+    socialService.on("other_action", handleOtherAction)
     thoughtsService.on("thoughtReady", handleThoughtReady)
 
     updateQueue()
@@ -216,6 +225,7 @@ export const HomeView = () => {
       socialService.removeListener("social_response", handleSocial)
       socialService.removeListener("tweet_scheduled", handleTweetScheduled)
       socialService.removeListener("tweet", handleTweet)
+      socialService.removeListener("other_action", handleOtherAction)
       thoughtsService.removeListener("thoughtReady", handleThoughtReady)
     }
   }, [])
