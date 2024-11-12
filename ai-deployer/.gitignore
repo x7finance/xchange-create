@@ -10,5 +10,10 @@ node_modules/
 .DS_Store
 
 .env
-.twitter-token.json
-.extra-actions.json
+.twitter-token.log
+.extra-actions.log
+.scheduled-tweets.log
+.tweets.log
+.retweets.log
+.likes.log
+.follows.log

@@ -17,6 +17,8 @@ export class TwitterService {
   private tokenPath: string
   private codeVerifier: string
   private state: string
+  public loggedIn: boolean = false
+  public activeOauthURL: string = ""
 
   constructor(clientId: string, clientSecret: string, userId?: string) {
     this.userId = userId
@@ -98,6 +100,8 @@ export class TwitterService {
         if (!hasValidTokens) {
           // Start OAuth flow if no valid tokens exist
           await instance.startOAuthFlow()
+        } else {
+          instance.loggedIn = true
         }
       })
 
@@ -109,12 +113,15 @@ export class TwitterService {
   private async startOAuthFlow(): Promise<void> {
     return new Promise((resolve, reject) => {
       const callbackPort = 42069
-      const callbackUrl = `http://localhost:${callbackPort}/callback`
+      const callbackUrl = `${process.env.REDIRECT_URL}:${callbackPort}/callback`
 
       this.server = http
         .createServer(async (req, res) => {
           if (req.url?.startsWith("/callback")) {
-            const url = new URL(req.url, `http://localhost:${callbackPort}`)
+            const url = new URL(
+              req.url,
+              `${process.env.REDIRECT_URL}:${callbackPort}`
+            )
             const code = url.searchParams.get("code")
 
             if (code) {
@@ -131,6 +138,7 @@ export class TwitterService {
                   expiresIn: tokens.expiresIn,
                 })
 
+                this.loggedIn = true
                 this.client = new TwitterApi(tokens.accessToken)
 
                 res.writeHead(200, { "Content-Type": "text/html" })
@@ -173,7 +181,7 @@ export class TwitterService {
       this.state = state
       // Open the authorization URL in the default browser
       open.default(url)
-
+      this.activeOauthURL = url
       console.log(
         "If your browser doesn't open automatically, please visit this URL:",
         url
@@ -197,8 +205,6 @@ export class TwitterService {
       if (mentions.data && mentions.data?.data?.length > 0) {
         this.lastCheckedId = mentions.data.data[0].id
       }
-
-      console.log(JSON.stringify(mentions))
 
       return (mentions?.data?.data ?? []).map(tweet => ({
         platform: "twitter",
@@ -243,19 +249,50 @@ export class TwitterService {
     }
   }
 
+  async postReply(content: SocialAction): Promise<boolean> {
+    try {
+      await this.refreshTokenIfNeeded()
+      const replied = await this.client.v2.reply(
+        content.tweet!,
+        content.tweetId!
+      )
+      return replied.data.id !== undefined
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.POST_REPLY, "Error posting reply:", error)
+      return false
+    }
+  }
+
   async getUsersTweets(userId: string): Promise<SocialMessage[]> {
     await this.refreshTokenIfNeeded()
 
-    const tweets = await this.client.v2.userTimeline(userId)
+    // TEMPORARY: Only get tweets from the file .tweets.log
+    try {
+      const tweets = readFileSync(
+        path.join(process.cwd(), ".tweets.log"),
+        "utf8"
+      )
+        .split("\n")
+        .map(line => JSON.parse(line))
+        .filter(tweet => tweet.userId === userId)
 
-    return (tweets?.data?.data ?? []).map(tweet => ({
-      platform: "twitter",
-      messageType: "tweet",
-      content: tweet.text,
-      userId: tweet.author_id!,
-      tweetId: tweet.id,
-      timestamp: dayjs(tweet.created_at).toISOString(),
-    }))
+      return tweets
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.GET_USER_TWEETS, "Error fetching user tweets:", error)
+      return []
+    }
+    // const tweets = await this.client.v2.userTimeline(userId)
+
+    // return (tweets?.data?.data ?? []).map(tweet => ({
+    //   platform: "twitter",
+    //   messageType: "tweet",
+    //   content: tweet.text,
+    //   userId: tweet.author_id!,
+    //   tweetId: tweet.id,
+    //   timestamp: dayjs(tweet.created_at).toISOString(),
+    // }))
   }
 
   async getUserFollowing(userId: string): Promise<Partial<UserV2>[]> {

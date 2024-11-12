@@ -202,7 +202,7 @@ export class NewsService {
   public async getSummaryOfSubject(subject: string): Promise<string> {
     const news = await this.getNews(subject)
     const summary = await this.aiService.chat(
-      `Summarize the news the user provides you into a nice readable and understandbale section, however long you need to be definitive. Reply in JSON format with { "summary": "<summary>" }`,
+      `Summarize the news the user gives you, include as much detail as you need to. Reply in JSON format with { "summary": "<summary>" }`,
       [
         {
           role: "user",

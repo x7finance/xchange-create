@@ -232,20 +232,21 @@ export const HomeView = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setNextThought(prev => {
-        if (prev === 0) {
-          addAction({
-            type: "thinking",
-            message: "Starting autonomous thought...",
-            timestamp: Date.now(),
-          })
-          setIsThinking(true)
-          AutonomousThoughtService.getInstance().processThought()
+      // REMOVE OTHER THOUGHTS FOR NOW
+      // setNextThought(prev => {
+      //   if (prev === 0) {
+      //     addAction({
+      //       type: "thinking",
+      //       message: "Starting autonomous thought...",
+      //       timestamp: Date.now(),
+      //     })
+      //     setIsThinking(true)
+      //     AutonomousThoughtService.getInstance().processThought()
 
-          return AutonomousThoughtService.getInstance().getThoughtInterval()
-        }
-        return Math.max(0, prev - 1)
-      })
+      //     return AutonomousThoughtService.getInstance().getThoughtInterval()
+      //   }
+      //   return Math.max(0, prev - 1)
+      // })
 
       setNextSocial(prev => {
         if (prev === 0) {
@@ -520,6 +521,10 @@ export const HomeView = () => {
         timestamp: Date.now(),
       })
     }
+  }
+
+  if (!twitterService.loggedIn) {
+    return <Text>Please login to Twitter: {twitterService.activeOauthURL}</Text>
   }
 
   return (

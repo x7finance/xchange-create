@@ -21,7 +21,7 @@ interface ThoughtResult {
 
 export class AutonomousThoughtService extends EventEmitter {
   private static instance: AutonomousThoughtService
-  public thoughtInterval: number = 300000 // 5 minutes in seconds
+  public thoughtInterval: number = 3 * 24 * 60 * 60 * 1000 // 3 days in milliseconds
   public isRunning: boolean = true
   private aiService: AIService
   private twitterService: TwitterService

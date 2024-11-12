@@ -164,7 +164,7 @@ export class AIService {
     try {
       const message = await this.anthropic.messages.create({
         model: "grok-beta",
-        max_tokens: 1000,
+        max_tokens: 2048,
         system: systemPrompt,
         messages,
       })

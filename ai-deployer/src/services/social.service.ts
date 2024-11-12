@@ -73,27 +73,58 @@ export class SocialService extends EventEmitter {
           console.log(`Tweet scheduled in ${formatTime(delayMs / 1000)}}`)
           if (delayMs <= 0) {
             // Execute immediately if timestamp is in the past
-            await this.executeAction(action)
+            //await this.executeAction(action)
+            appendFileSync(
+              path.join(process.cwd(), ".tweets.log"),
+              `${JSON.stringify(action)}\n`
+            )
           } else {
             // Schedule for future execution
             this.emit("tweet_scheduled", action)
+            appendFileSync(
+              path.join(process.cwd(), ".scheduled-tweets.log"),
+              `${JSON.stringify(action)}\n`
+            )
             setTimeout(async () => {
-              await this.executeAction(action)
+              //await this.executeAction(action)
+              appendFileSync(
+                path.join(process.cwd(), ".tweets.log"),
+                `${JSON.stringify(action)}\n`
+              )
             }, delayMs)
           }
         } else if (action.type === "retweet") {
-          await this.twitterService.retweet(action.tweetId!)
+          //await this.twitterService.retweet(action.tweetId!)
+          appendFileSync(
+            path.join(process.cwd(), ".retweets.log"),
+            `${JSON.stringify(action)}\n`
+          )
           this.emit("other_action", action)
         } else if (action.type === "like") {
-          await this.twitterService.likeTweet(action.tweetId!)
+          //await this.twitterService.likeTweet(action.tweetId!)
+          appendFileSync(
+            path.join(process.cwd(), ".likes.log"),
+            `${JSON.stringify(action)}\n`
+          )
           this.emit("other_action", action)
         } else if (action.type === "follow") {
-          await this.twitterService.followUser(action.userId!)
+          //await this.twitterService.followUser(action.userId!)
+          appendFileSync(
+            path.join(process.cwd(), ".follows.json"),
+            `${JSON.stringify(action)}\n`
+          )
+          this.emit("other_action", action)
+        } else if (action.type === "reply") {
+          //await this.twitterService.replyToTweet(action.tweetId!, action.tweet!)
+          appendFileSync(
+            path.join(process.cwd(), ".replies.log"),
+            `${JSON.stringify(action)}\n`
+          )
           this.emit("other_action", action)
         } else {
           appendFileSync(
-            path.join(process.cwd(), ".extra-actions.json"),
-            JSON.stringify(action)
+            path.join(process.cwd(), ".unhandled-actions.log"),
+            `${JSON.stringify(action)}\n`
           )
           console.log(`UNHANDLED ACTION`, JSON.stringify(action))
         }
@@ -170,52 +201,60 @@ export class SocialService extends EventEmitter {
         }
 
         Actions:
+        Use This Action to post a tweet:
         {
-         type: "tweet",
-         "tweet": "tweet message",
-         "intendedPostTime": "timestamp",
-         "attachements": [images/video links to post],
-         "isThreaded": boolean, 
-         "otherTweets": [ifThreaded more actions[]]
-         
+          "type": "tweet",
+          "tweet": "tweet message",
+          "intendedPostTime": "timestamp",
+          "attachements": [images/video links to post],
+          "isThreaded": boolean, 
+          "otherTweets": [ifThreaded more actions[]]
         }
 
+        Use This Action to follow a user
         {
           "type": "follow",
           "username/user_id": "username/user id of person we will follow"
         }
 
+        Use This Action to like a tweet
         {
           "type": "like",
           "tweetId": "VALID TWEET ID YOU'VE SEEN ONLY"
         }
 
+        Use This Action to retweet a tweet
         {
           "type": "retweet",
           "tweetId": "VALID TWEET ID YOU'VE SEEN ONLY"
         }
 
+        Use This Action to read a users profile feed, typically done before following / replying to them
         {
           "type": "read-feed",
           "userId/username": "user id/username of persons feed we will read to you"
         }
 
+        Use This Action to reply to a tweet
         {
           "type": "reply",
           "tweetId": "tweet id",
-          "comment": "comment"
+          "tweet": "comment"
         }
 
+        Use This Action to unfollow a user
         {
           "type": "unfollow",
           "username/userId": "username/user id of person we will follow"
         }
 
+        Use This Action to research a topic
         {
           "type": "research",
           "query": "query we will google"
         }
 
+        Use This Action to lookup a token
         {
           "type": "lookup-token",
           "address": "ADDRESS OF TOKEN YOU WANT TO LOOKUP"
