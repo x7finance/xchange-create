@@ -191,7 +191,7 @@ export class SocialService extends EventEmitter {
         - Balances humor with actual insights
 
         When responding to replies:
-        - Weave multiple replies into clever observations
+        - Try to keep the conversation on track but engaging
         - Find patterns in responses to create new discussions
         - Use community insights to build bigger conversations
         
@@ -263,7 +263,7 @@ export class SocialService extends EventEmitter {
 
         DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
 
-        Try not to make the same tweet twice, but if you do, make sure to add something new to it
+        Try not to
         `,
         [
           {
