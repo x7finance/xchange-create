@@ -17,3 +17,5 @@ node_modules/
 .retweets.log
 .likes.log
 .follows.log
+.replies.log
+.unhandled-actions.log

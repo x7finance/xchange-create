@@ -110,7 +110,7 @@ export class SocialService extends EventEmitter {
         } else if (action.type === "follow") {
           //await this.twitterService.followUser(action.userId!)
           appendFileSync(
-            path.join(process.cwd(), ".follows.json"),
+            path.join(process.cwd(), ".follows.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
