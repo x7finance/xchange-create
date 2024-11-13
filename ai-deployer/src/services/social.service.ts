@@ -261,9 +261,12 @@ export class SocialService extends EventEmitter {
           "address": "ADDRESS OF TOKEN YOU WANT TO LOOKUP"
         }
 
+        
         DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
 
-        Try not to tweet the same thing twice or reply to the same tweet twice
+        DO NOT REPLY TO THE SAME TWEET TWICE UNLESS IT IS A THREAD
+
+        DO NOT TWEET THE SAME TWEET AGAIN REFERENCE <previous_tweets> FOR YOUR TWEETS
         `,
         [
           {

@@ -267,32 +267,22 @@ export class TwitterService {
   async getUsersTweets(userId: string): Promise<SocialMessage[]> {
     await this.refreshTokenIfNeeded()
 
-    // TEMPORARY: Only get tweets from the file .tweets.log
     try {
-      const tweets = readFileSync(
-        path.join(process.cwd(), ".tweets.log"),
-        "utf8"
-      )
-        .split("\n")
-        .map(line => JSON.parse(line))
-        .filter(tweet => tweet.userId === userId)
+      const tweets = await this.client.v2.userTimeline(userId)
 
-      return tweets
+      return (tweets?.data?.data ?? []).map(tweet => ({
+        platform: "twitter",
+        messageType: "tweet",
+        content: tweet.text,
+        userId: tweet.author_id!,
+        tweetId: tweet.id,
+        timestamp: dayjs(tweet.created_at).toISOString(),
+      }))
     } catch (error) {
       console.error(error)
       log.error(LogCodes.GET_USER_TWEETS, "Error fetching user tweets:", error)
       return []
     }
-    // const tweets = await this.client.v2.userTimeline(userId)
-
-    // return (tweets?.data?.data ?? []).map(tweet => ({
-    //   platform: "twitter",
-    //   messageType: "tweet",
-    //   content: tweet.text,
-    //   userId: tweet.author_id!,
-    //   tweetId: tweet.id,
-    //   timestamp: dayjs(tweet.created_at).toISOString(),
-    // }))
   }
 
   async getUserFollowing(userId: string): Promise<Partial<UserV2>[]> {
