@@ -189,6 +189,26 @@ export class TwitterService {
     })
   }
 
+  async getMyReplies(): Promise<SocialMessage[]> {
+    try {
+      await this.refreshTokenIfNeeded()
+      const fromDiskReplies = readFileSync(
+        path.join(process.cwd(), ".replies.log"),
+        "utf-8"
+      )
+      const replies = fromDiskReplies
+        .split("\n")
+        .filter(line => line.trim())
+        .map(line => JSON.parse(line))
+
+      return replies
+    } catch (error) {
+      console.error(error)
+      log.error(LogCodes.GET_MY_REPLIES, "Error fetching my replies:", error)
+      return []
+    }
+  }
+
   async getMentions(userId?: string): Promise<SocialMessage[]> {
     try {
       await this.refreshTokenIfNeeded()
@@ -253,10 +273,9 @@ export class TwitterService {
   async postReply(content: SocialAction): Promise<boolean> {
     try {
       await this.refreshTokenIfNeeded()
-      const replied = await this.client.v2.reply(
-        content.tweet!,
-        content.tweetId!
-      )
+      const toReplyId = content.tweetId!.replace("tweetId:", "")
+
+      const replied = await this.client.v2.reply(content.tweet!, toReplyId)
       return replied.data.id !== undefined
     } catch (error) {
       console.error(error)
@@ -281,8 +300,8 @@ export class TwitterService {
           path.join(process.cwd(), ".tweets.log"),
           "utf-8"
         )
-        const fromDiskReplies = readFileSync(
-          path.join(process.cwd(), ".replies.log"),
+        const fromDiskScheduledTweets = readFileSync(
+          path.join(process.cwd(), ".scheduled-tweets.log"),
           "utf-8"
         )
         const tweets = fromDisk
@@ -290,12 +309,12 @@ export class TwitterService {
           .filter(line => line.trim())
           .map(line => JSON.parse(line))
 
-        const replies = fromDiskReplies
+        const scheduledReplies = fromDiskScheduledTweets
           .split("\n")
           .filter(line => line.trim())
           .map(line => JSON.parse(line))
 
-        storedTweets = [...tweets, ...replies]
+        storedTweets = [...tweets, ...scheduledReplies]
       }
 
       return (latestTweets?.data?.data ?? [])
@@ -318,7 +337,9 @@ export class TwitterService {
   async getUserFollowing(userId: string): Promise<Partial<UserV2>[]> {
     await this.refreshTokenIfNeeded()
 
-    const following = await this.client.v2.following(userId)
+    const toFollowId = userId.replace("userId:", "")
+
+    const following = await this.client.v2.following(toFollowId)
 
     return (following?.data ?? []).map((user: UserV2) => ({
       id: user.id,
@@ -348,8 +369,10 @@ export class TwitterService {
   async likeTweet(tweetId: string): Promise<boolean> {
     await this.refreshTokenIfNeeded()
 
+    const toLikeId = tweetId.replace("tweetId:", "")
+
     try {
-      const result = await this.client.v2.like(this.userId!, tweetId)
+      const result = await this.client.v2.like(this.userId!, toLikeId)
       return result.data.liked
     } catch (error) {
       console.error(error)
@@ -360,9 +383,10 @@ export class TwitterService {
 
   async unLikeTweet(tweetId: string): Promise<boolean> {
     await this.refreshTokenIfNeeded()
+    const toLikeId = tweetId.replace("tweetId:", "")
 
     try {
-      const result = await this.client.v2.unlike(this.userId!, tweetId)
+      const result = await this.client.v2.unlike(this.userId!, toLikeId)
       return !result.data.liked
     } catch (error) {
       console.error(error)
@@ -373,9 +397,10 @@ export class TwitterService {
 
   async followUser(userId: string): Promise<boolean> {
     await this.refreshTokenIfNeeded()
+    const toFollowId = userId.replace("userId:", "")
 
     try {
-      const result = await this.client.v2.follow(this.userId!, userId)
+      const result = await this.client.v2.follow(this.userId!, toFollowId)
       return result.data.following
     } catch (error) {
       console.error(error)
@@ -386,9 +411,10 @@ export class TwitterService {
 
   async unFollowUser(userId: string): Promise<boolean> {
     await this.refreshTokenIfNeeded()
+    const toFollowId = userId.replace("userId:", "")
 
     try {
-      const result = await this.client.v2.unfollow(this.userId!, userId)
+      const result = await this.client.v2.unfollow(this.userId!, toFollowId)
       return !result.data.following
     } catch (error) {
       console.error(error)
@@ -399,9 +425,10 @@ export class TwitterService {
 
   async retweet(tweetId: string): Promise<boolean> {
     await this.refreshTokenIfNeeded()
+    const retweetId = tweetId.replace("tweetId:", "")
 
     try {
-      const result = await this.client.v2.retweet(this.userId!, tweetId)
+      const result = await this.client.v2.retweet(this.userId!, retweetId)
       return result.data.retweeted
     } catch (error) {
       console.error(error)

@@ -23,6 +23,7 @@ export enum LogCodes {
   RETWEET_FAILED = "RETWEET_FAILED",
   POST_REPLY = "POST_REPLY",
   GET_USER_TWEETS = "GET_USER_TWEETS",
+  GET_MY_REPLIES = "GET_MY_REPLIES",
 }
 
 export interface LogMethod {

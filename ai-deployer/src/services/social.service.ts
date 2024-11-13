@@ -73,7 +73,7 @@ export class SocialService extends EventEmitter {
           console.log(`Tweet scheduled in ${formatTime(delayMs / 1000)}}`)
           if (delayMs <= 0) {
             // Execute immediately if timestamp is in the past
-            await this.executeAction(action)
+            //await this.executeAction(action)
             appendFileSync(
               path.join(process.cwd(), ".tweets.log"),
               `${JSON.stringify(action)}\n`
@@ -86,7 +86,7 @@ export class SocialService extends EventEmitter {
               `${JSON.stringify(action)}\n`
             )
             setTimeout(async () => {
-              await this.executeAction(action)
+              //await this.executeAction(action)
               appendFileSync(
                 path.join(process.cwd(), ".tweets.log"),
                 `${JSON.stringify(action)}\n`
@@ -94,28 +94,28 @@ export class SocialService extends EventEmitter {
             }, delayMs)
           }
         } else if (action.type === "retweet") {
-          await this.twitterService.retweet(action.tweetId!)
+          //await this.twitterService.retweet(action.tweetId!)
           appendFileSync(
             path.join(process.cwd(), ".retweets.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "like") {
-          await this.twitterService.likeTweet(action.tweetId!)
+          //await this.twitterService.likeTweet(action.tweetId!)
           appendFileSync(
             path.join(process.cwd(), ".likes.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "follow") {
-          await this.twitterService.followUser(action.userId!)
+          //await this.twitterService.followUser(action.userId!)
           appendFileSync(
             path.join(process.cwd(), ".follows.log"),
             `${JSON.stringify(action)}\n`
           )
           this.emit("other_action", action)
         } else if (action.type === "reply") {
-          await this.twitterService.postReply(action)
+          //await this.twitterService.postReply(action)
           appendFileSync(
             path.join(process.cwd(), ".replies.log"),
             `${JSON.stringify(action)}\n`
@@ -165,6 +165,7 @@ export class SocialService extends EventEmitter {
       this.loggedInUserId
     )
     const latestTokens = await this.tokenService.getLatestTokens()
+    const myReplies = await this.twitterService.getMyReplies()
     const news = await this.newsService.getSummaryOfSubject("technology")
     console.log(`\n\n ${news}`)
     try {
@@ -202,7 +203,6 @@ export class SocialService extends EventEmitter {
           "type": "tweet",
           "tweet": "tweet message",
           "intendedPostTime": "timestamp",
-          "attachements": [images/video links to post],
           "isThreaded": boolean, 
           "otherTweets": [ifThreaded more actions[]]
         }
@@ -256,10 +256,12 @@ export class SocialService extends EventEmitter {
           "address": "ADDRESS OF TOKEN YOU WANT TO LOOKUP"
         }
 
-        
-        DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
-
-        DO NOT repeat tweets in the <0xtraderai_tweets> section, you will be punished if you do
+        Some rules to follow:
+        - DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN, all tweet ids will be given to you in a tweetId:NUMBER format along with userId:NUMBER
+        - ENSURE YOU REPLY TO THE PROPER USERID AND TWEETID
+        - DO NOT REPLY TO YOUR OWN TWEETS
+        - DO NOT repeat tweets in the <0xtraderai_tweets> section
+        - DO NOT reply to tweetIds in the <tweets_already_replied_to> section
         `,
         [
           {
@@ -269,18 +271,17 @@ export class SocialService extends EventEmitter {
             ${JSON.stringify([])}
             </following>
 
-            <home_timeline format="array[{ "tweet": "content", "tweetId": "tweetId", "userId": "userId" }]">
-            ${JSON.stringify(
-              homeTimeline.map(tweet => ({
-                tweet: tweet.content,
-                tweetId: tweet.tweetId,
-                userId: tweet.userId,
-              }))
-            )}
+            <home_timeline>
+            ${homeTimeline
+              .map(
+                tweet =>
+                  `tweetId:${tweet.tweetId} | userId:${tweet.userId} | posted: "${tweet.content}"`
+              )
+              .join(",\n")}
             </home_timeline>
 
-            <0xtraderai_tweets format="array[TIMESTAMP, I tweeted: "TWEET CONTENT TO NO REPEAT"]">
-            ${previousTweets.map(tweet => `${tweet.timestamp}, I tweeted: "${tweet.content}"`).join(",\n")}
+            <0xtraderai_tweets>
+            ${previousTweets.map(tweet => `"${tweet.content}"`).join(",\n")}
             </0xtraderai_tweets>
 
             <newest_coins format="json">
@@ -291,15 +292,18 @@ export class SocialService extends EventEmitter {
             ${JSON.stringify(news || [])}
             </technology_news>
 
-            <mentions format="array[{ "tweet": "content", "tweetId": "tweetId", "userId": "userId" }]">
-            ${JSON.stringify(
-              mentions.map(mention => ({
-                tweet: mention.content,
-                tweetId: mention.tweetId,
-                userId: mention.userId,
-              }))
-            )}
+            <mentions>
+            ${mentions
+              .map(
+                mention =>
+                  `tweetId:${mention.tweetId} | userId:${mention.userId} | posted: "${mention.content}"`
+              )
+              .join(",\n")}
             </mentions>
+
+            <tweets_already_replied_to>
+            ${myReplies.map(tweet => `tweetId:${tweet.tweetId}`).join(",\n")}
+            </tweets_already_replied_to>
             `,
           },
         ]
