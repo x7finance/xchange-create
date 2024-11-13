@@ -178,6 +178,7 @@ export class SocialService extends EventEmitter {
         - Each tweet/reply must provide unique value
         - Maintain conversational memory from previous interactions
         - Vary your responses; avoid repetitive patterns
+        - Do not mention usernames in your replies, it auto does that
         
         CONTEXT TRACKING:
         <recent_activity>
