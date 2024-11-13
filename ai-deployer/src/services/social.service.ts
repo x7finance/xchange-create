@@ -160,15 +160,10 @@ export class SocialService extends EventEmitter {
 
   public async processSocialUpdate(): Promise<void> {
     const mentions = await this.twitterService.getMentions(this.loggedInUserId)
-    // const following = await this.twitterService.getUserFollowing(
-    //   this.loggedInUserId
-    // )
-    // console.log(`FOLLOWING`, JSON.stringify(following))
     const homeTimeline = await this.twitterService.getHomeTimeline()
     const previousTweets = await this.twitterService.getUsersTweets(
       this.loggedInUserId
     )
-    // const trends = await this.trendsService.getTrends()
     const latestTokens = await this.tokenService.getLatestTokens()
     const news = await this.newsService.getSummaryOfSubject("technology")
     console.log(`\n\n ${news}`)
@@ -215,7 +210,7 @@ export class SocialService extends EventEmitter {
         Use This Action to follow a user
         {
           "type": "follow",
-          "username/user_id": "username/user id of person we will follow"
+          "userId": "user id of person we will follow"
         }
 
         Use This Action to like a tweet
@@ -233,7 +228,7 @@ export class SocialService extends EventEmitter {
         Use This Action to read a users profile feed, typically done before following / replying to them
         {
           "type": "read-feed",
-          "userId/username": "user id/username of persons feed we will read to you"
+          "userId": "user id"
         }
 
         Use This Action to reply to a tweet
@@ -246,7 +241,7 @@ export class SocialService extends EventEmitter {
         Use This Action to unfollow a user
         {
           "type": "unfollow",
-          "username/userId": "username/user id of person we will follow"
+          "userId": "user id of person we will follow"
         }
 
         Use This Action to research a topic
@@ -264,9 +259,7 @@ export class SocialService extends EventEmitter {
         
         DO NOT HALUCINATE USERIDS, TWEETIDS, OR TOKEN ADDRESSES, ONLY USE THE ONES YOU'VE SEEN
 
-        DO NOT REPLY TO THE SAME TWEET TWICE UNLESS IT IS A THREAD
-
-        DO NOT TWEET THE SAME TWEET AGAIN REFERENCE <previous_tweets> FOR YOUR TWEETS
+        DO NOT repeat tweets in the <0xtraderai_tweets> section, you will be punished if you do
         `,
         [
           {
@@ -276,25 +269,19 @@ export class SocialService extends EventEmitter {
             ${JSON.stringify([])}
             </following>
 
-            <home_timeline format="json">
-            ${JSON.stringify(homeTimeline || [])}
+            <home_timeline format="array[{ "tweet": "content", "tweetId": "tweetId", "userId": "userId" }]">
+            ${JSON.stringify(
+              homeTimeline.map(tweet => ({
+                tweet: tweet.content,
+                tweetId: tweet.tweetId,
+                userId: tweet.userId,
+              }))
+            )}
             </home_timeline>
 
-            <previous_tweets format="json">
-            ${JSON.stringify(previousTweets || [])}
-            </previous_tweets>
-
-            <hackernews format="json">
-            ${JSON.stringify([])}
-            </hackernews>
-
-            <news format="json">
-            ${JSON.stringify([])}
-            </news>
-
-            <crypto_trends format="json">
-            ${JSON.stringify([])}
-            </crypto_trends>
+            <0xtraderai_tweets format="array[TIMESTAMP, I tweeted: "TWEET CONTENT TO NO REPEAT"]">
+            ${previousTweets.map(tweet => `${tweet.timestamp}, I tweeted: "${tweet.content}"`).join(",\n")}
+            </0xtraderai_tweets>
 
             <newest_coins format="json">
             ${JSON.stringify(latestTokens || [])}
@@ -304,8 +291,14 @@ export class SocialService extends EventEmitter {
             ${JSON.stringify(news || [])}
             </technology_news>
 
-            <mentions format="json">
-            ${JSON.stringify(mentions || [])}
+            <mentions format="array[{ "tweet": "content", "tweetId": "tweetId", "userId": "userId" }]">
+            ${JSON.stringify(
+              mentions.map(mention => ({
+                tweet: mention.content,
+                tweetId: mention.tweetId,
+                userId: mention.userId,
+              }))
+            )}
             </mentions>
             `,
           },

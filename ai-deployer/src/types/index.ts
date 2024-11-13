@@ -1,8 +1,9 @@
 export interface SocialMessage {
-  platform: "twitter" | "discord" | "telegram"
-  messageType: "tweet" | "mention" | "dm" | "reply"
+  platform: string
+  messageType: string
   content: string
   userId: string
+  tweetId: string
   timestamp: string
   originalMessage?: SocialMessage // For replies/quotes
 }

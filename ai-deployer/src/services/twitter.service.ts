@@ -211,6 +211,7 @@ export class TwitterService {
         messageType: "mention",
         content: tweet.text,
         userId: tweet.author_id!,
+        tweetId: tweet.id,
         timestamp: new Date().toISOString(),
       }))
     } catch (error) {
@@ -268,16 +269,45 @@ export class TwitterService {
     await this.refreshTokenIfNeeded()
 
     try {
-      const tweets = await this.client.v2.userTimeline(userId)
+      const latestTweets = await this.client.v2.userTimeline(userId, {
+        max_results: 90,
+      })
 
-      return (tweets?.data?.data ?? []).map(tweet => ({
-        platform: "twitter",
-        messageType: "tweet",
-        content: tweet.text,
-        userId: tweet.author_id!,
-        tweetId: tweet.id,
-        timestamp: dayjs(tweet.created_at).toISOString(),
-      }))
+      console.log("latestTweets", JSON.stringify(latestTweets))
+
+      let storedTweets: SocialMessage[] = []
+      if (userId === this.userId) {
+        const fromDisk = readFileSync(
+          path.join(process.cwd(), ".tweets.log"),
+          "utf-8"
+        )
+        const fromDiskReplies = readFileSync(
+          path.join(process.cwd(), ".replies.log"),
+          "utf-8"
+        )
+        const tweets = fromDisk
+          .split("\n")
+          .filter(line => line.trim())
+          .map(line => JSON.parse(line))
+
+        const replies = fromDiskReplies
+          .split("\n")
+          .filter(line => line.trim())
+          .map(line => JSON.parse(line))
+
+        storedTweets = [...tweets, ...replies]
+      }
+
+      return (latestTweets?.data?.data ?? [])
+        .map(tweet => ({
+          platform: "twitter",
+          messageType: "tweet",
+          content: tweet.text,
+          userId: tweet.author_id!,
+          tweetId: tweet.id,
+          timestamp: dayjs(tweet.created_at).toISOString(),
+        }))
+        .concat(storedTweets)
     } catch (error) {
       console.error(error)
       log.error(LogCodes.GET_USER_TWEETS, "Error fetching user tweets:", error)

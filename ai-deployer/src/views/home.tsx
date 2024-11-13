@@ -202,7 +202,7 @@ export const HomeView = () => {
     const handleOtherAction = (action: SocialAction) => {
       addAction({
         type: "completed",
-        message: `Other action: ${action.type} on ${action.tweetId ?? action.userId ?? action.username}`,
+        message: `Other action: ${action.type} on ${action.tweetId ?? action.userId ?? action.username} ${action.tweet ?? ""}`,
         timestamp: Date.now(),
       })
     }
