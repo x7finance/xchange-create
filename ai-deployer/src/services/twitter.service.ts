@@ -217,14 +217,21 @@ export class TwitterService {
         userId || this.userId!,
         this.lastCheckedId
           ? {
+              max_results: 30,
               since_id: this.lastCheckedId!,
+              expansions: ["author_id", "in_reply_to_user_id"],
             }
-          : {}
+          : {
+              max_results: 30,
+              expansions: ["author_id", "in_reply_to_user_id"],
+            }
       )
 
       if (mentions.data && mentions.data?.data?.length > 0) {
         this.lastCheckedId = mentions.data.data[0].id
       }
+
+      console.log("mentions", JSON.stringify(mentions))
 
       return (mentions?.data?.data ?? []).map(tweet => ({
         platform: "twitter",
@@ -290,9 +297,8 @@ export class TwitterService {
     try {
       const latestTweets = await this.client.v2.userTimeline(userId, {
         max_results: 90,
+        expansions: ["author_id", "in_reply_to_user_id"],
       })
-
-      console.log("latestTweets", JSON.stringify(latestTweets))
 
       let storedTweets: SocialMessage[] = []
       if (userId === this.userId) {
@@ -326,7 +332,16 @@ export class TwitterService {
           tweetId: tweet.id,
           timestamp: dayjs(tweet.created_at).toISOString(),
         }))
-        .concat(storedTweets)
+        .concat(
+          storedTweets.map((action: SocialAction) => ({
+            platform: "twitter" as const,
+            messageType: "tweet" as const,
+            content: action.tweet ?? "",
+            userId: action.userId ?? "",
+            tweetId: action.tweetId ?? "",
+            timestamp: dayjs(action.intendedPostTime).toISOString(),
+          }))
+        )
     } catch (error) {
       console.error(error)
       log.error(LogCodes.GET_USER_TWEETS, "Error fetching user tweets:", error)
@@ -354,7 +369,9 @@ export class TwitterService {
   async getHomeTimeline(): Promise<SocialMessage[]> {
     await this.refreshTokenIfNeeded()
 
-    const timeline = await this.client.v2.homeTimeline()
+    const timeline = await this.client.v2.homeTimeline({
+      expansions: ["author_id", "in_reply_to_user_id"],
+    })
 
     return (timeline?.data?.data ?? []).map(tweet => ({
       platform: "twitter",

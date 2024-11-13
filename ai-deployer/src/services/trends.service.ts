@@ -106,7 +106,6 @@ export class TrendsService {
     const response = await axios.get(
       `https://api.worldnewsapi.com/search-news?text=cryptocurrency&language=en&api-key=${this.WORLD_NEWS_API_KEY}`
     )
-    console.log(`RESPONSE`, JSON.stringify(response.data))
     return response.data.news.map((article: any) => ({
       title: article.title,
       text: article.text,

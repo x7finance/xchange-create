@@ -138,7 +138,6 @@ export class AIService {
 
       const responseText =
         message.content[0].type === "text" ? message.content[0].text : ""
-      console.log({ responseText })
       return JSON.parse(responseText) as AIResponse[]
     } catch (error) {
       log.error(
@@ -173,7 +172,6 @@ export class AIService {
         message.content[0].type === "text"
           ? message.content[0].text.replace("```json", "").replace("```", "")
           : ""
-      console.log(`CHATREPONSE`, { responseText })
       return JSON.parse(responseText)
     } catch (error) {
       log.error(

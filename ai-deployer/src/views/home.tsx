@@ -484,6 +484,7 @@ export const HomeView = () => {
             intendedPostTime: dayjs().format("YYYY-MM-DD HH:mm:ss"),
             isThreaded: tweet.isThreaded!,
             otherTweets: tweet.otherTweets,
+            timestamp: dayjs().format("YYYY-MM-DD HH:mm:ss"),
           }
           const posted = await twitterService.postTweet(socialAction)
           if (posted) {

@@ -106,6 +106,7 @@ export interface TrendingCoin {
 }
 
 export interface SocialAction {
+  timestamp: any
   type?: string
   tweet?: string
   intendedPostTime?: string

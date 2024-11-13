@@ -211,7 +211,6 @@ export class NewsService {
       ]
     )
 
-    console.log(`SUMMARY`, summary)
     return summary.summary
   }
 }
